@@ -1,9 +1,10 @@
 import random
-import numpy as np
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 import glob
+import numpy as np
+import pandas as pd
 
 
 def generate_individual(num_features):
@@ -36,7 +37,9 @@ def evaluate_population(population, X_train, X_test, y_train, y_test):
 
 
 def select_individuals(population, scores, num_parents):
-    sorted_indices = sorted(range(len(scores)), key=lambda k: scores[k], reverse=True)
+    sorted_indices = sorted(range(len(scores)),
+                            key=lambda k: scores[k],
+                            reverse=True)
     return [population[i] for i in sorted_indices[:num_parents]]
 
 
@@ -55,42 +58,91 @@ def generate_offspring(parents, num_offspring, distribution):
     return offspring
 
 
-def genetic_algorithm(X_train, X_test, y_train, y_test, population_size,
-                      num_generations, num_parents, num_offspring):
-    num_features = X_train.shape[1]
+def genetic_algorithm(X_train,
+                      X_test,
+                      y_train,
+                      y_test,
+                      population_size,
+                      num_generations,
+                      num_parents,
+                      num_offspring,
+                      num_best=5):
+    num_features = X_train[0].shape[0]
     population = generate_population(population_size, num_features)
 
     for generation in range(num_generations):
-        scores = evaluate_population(population, X_train, X_test, y_train, y_test)
+        print("Generation", generation + 1)
+
+        # Evaluate fitness
+        scores = evaluate_population(population, X_train, X_test, y_train,
+                                     y_test)
+
+        # Select parents
         parents = select_individuals(population, scores, num_parents)
+
+        # Create offspring through crossover
         distribution = estimate_distribution(parents, num_features)
+
+        # Perform mutation
         offspring = generate_offspring(parents, num_offspring, distribution)
+
+        # Replace the population with offspring
         population = parents + offspring
 
+    # Get the final fitness scores
     scores = evaluate_population(population, X_train, X_test, y_train, y_test)
-    best_individual_index = np.argmax(scores)
-    best_individual = population[best_individual_index]
-    best_fitness = scores[best_individual_index]
 
-    return best_individual, best_fitness
+    # print(f'scores: {scores}')
+
+    # Select the best individuals
+    best_indices = sorted(range(len(scores)),
+                          key=lambda k: scores[k],
+                          reverse=True)[:num_best]
+    best_individuals = [population[i] for i in best_indices]
+    best_fitnesses = [scores[i] for i in best_indices]
+
+    return best_individuals, best_fitnesses
 
 
 # Loading dataset
 X_all = []
 y_all = []
-for path in glob.glob('dataset_v2/forest/*'):
+for path in glob.glob('data/dataset_v2/forest/*'):
     X_all.append(np.load(path))
     y_all.append(0)
 
-for path in glob.glob('dataset_v2/non_forest/*'):
+for path in glob.glob('data/dataset_v2/non_forest/*'):
     X_all.append(np.load(path))
     y_all.append(1)
 
-# Perform train-test split
+# perform split
 X_train, X_val, y_train, y_val = train_test_split(X_all, y_all, test_size=0.4)
 X_val, X_test, y_val, y_test = train_test_split(X_val, y_val, test_size=0.5)
 
-# Call the genetic algorithm
+# call the genetic algorithm
+num_best = 5
 population_size = 50
 num_generations = 10
-num
+num_parents = 15
+num_offspring = 20
+
+best_individuals, best_fitnesses = genetic_algorithm(X_train, X_val, y_train,
+                                                     y_val, population_size,
+                                                     num_generations,
+                                                     num_parents,
+                                                     num_offspring)
+
+data = []
+for i in range(num_best):
+    test_result = calculate_fitness(best_individuals[i], X_train, X_test,
+                                    y_train, y_test)
+    bands = np.nonzero(np.array(best_individuals[i]) + 1)
+    individual_str = ''.join(str(band) for band in bands)
+    data.append({
+        "Individual": individual_str,
+        "Fitness": best_fitnesses[i],
+        "Test acc": test_result
+    })
+
+data = pd.DataFrame.from_records(data)
+print(data.sort_values(by='Test acc', ascending=False))
