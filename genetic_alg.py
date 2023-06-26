@@ -4,6 +4,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 import glob
 import numpy as np
+import pandas as pd
 
 
 def generate_individual(num_features):
@@ -175,10 +176,21 @@ best_individuals, best_fitnesses = genetic_algorithm(X_train, X_val, y_train,
                                                      num_parents,
                                                      num_offspring)
 
+data = []
 for i in range(num_best):
-    print(f"Individual #{i+1}: {best_individuals[i]}")
-    print(f"With fitness: {best_fitnesses[i] :.3f}")
+    # print(f"Individual #{i+1}: {best_individuals[i]}")
+    # print(f"With fitness: {best_fitnesses[i] :.3f}")
     test_result = calculate_fitness(best_individuals[i], X_train, X_test,
                                     y_train, y_test)
-    print(f'And test accuracy: {test_result :.3f}')
-    print()
+    # print(f'And test accuracy: {test_result :.3f}')
+    # print()
+    bands = np.nonzero(np.array(best_individuals[i]) + 1)
+    individual_str = ''.join(str(band) for band in bands)
+    data.append({
+        "Individual": individual_str,
+        "Fitness": best_fitnesses[i],
+        "Test acc": test_result
+    })
+
+data = pd.DataFrame.from_records(data)
+print(data.sort_values(by='Test acc', ascending=False))
