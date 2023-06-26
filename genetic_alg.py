@@ -101,8 +101,15 @@ def mutation(offspring):
     return mutated_offspring
 
 
-def genetic_algorithm(X_train, X_test, y_train, y_test, population_size,
-                      num_generations, num_parents, num_offspring):
+def genetic_algorithm(X_train,
+                      X_test,
+                      y_train,
+                      y_test,
+                      population_size,
+                      num_generations,
+                      num_parents,
+                      num_offspring,
+                      num_best=5):
     num_features = X_train[0].shape[0]
     population = generate_population(population_size, num_features)
 
@@ -130,12 +137,14 @@ def genetic_algorithm(X_train, X_test, y_train, y_test, population_size,
 
     # print(f'scores: {scores}')
 
-    # Select the best individual
-    best_individual_index = max(range(len(scores)), key=lambda k: scores[k])
-    best_individual = population[best_individual_index]
-    best_fitness = scores[best_individual_index]
+    # Select the best individuals
+    best_indices = sorted(range(len(scores)),
+                          key=lambda k: scores[k],
+                          reverse=True)[:num_best]
+    best_individuals = [population[i] for i in best_indices]
+    best_fitnesses = [scores[i] for i in best_indices]
 
-    return best_individual, best_fitness
+    return best_individuals, best_fitnesses
 
 
 # Loading dataset
@@ -154,20 +163,22 @@ X_train, X_val, y_train, y_val = train_test_split(X_all, y_all, test_size=0.4)
 X_val, X_test, y_val, y_test = train_test_split(X_val, y_val, test_size=0.5)
 
 # call the genetic algorithm
+num_best = 5
 population_size = 50
 num_generations = 10
 num_parents = 15
 num_offspring = 20
 
-best_individual, best_fitness = genetic_algorithm(X_train, X_val, y_train,
-                                                  y_val, population_size,
-                                                  num_generations, num_parents,
-                                                  num_offspring)
+best_individuals, best_fitnesses = genetic_algorithm(X_train, X_val, y_train,
+                                                     y_val, population_size,
+                                                     num_generations,
+                                                     num_parents,
+                                                     num_offspring)
 
-print(f"Best individual: {best_individual}")
-print(f"With fitness: {best_fitness :.3f}")
-
-print(f'\nCalculating fitness for {best_individual}')
-test_result = calculate_fitness(best_individual, X_train, X_test, y_train,
-                                y_test)
-print(f'test result = {test_result :.3f}')
+for i in range(num_best):
+    print(f"Individual #{i+1}: {best_individuals[i]}")
+    print(f"With fitness: {best_fitnesses[i] :.3f}")
+    test_result = calculate_fitness(best_individuals[i], X_train, X_test,
+                                    y_train, y_test)
+    print(f'And test accuracy: {test_result :.3f}')
+    print()
