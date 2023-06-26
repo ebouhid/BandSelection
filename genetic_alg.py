@@ -19,9 +19,20 @@ def generate_population(population_size, num_features):
 
 
 def calculate_fitness(individual, X_train, X_test, y_train, y_test):
-    selected_features = [i for i, val in enumerate(individual) if val == 1]
-    X_train_sel = X_train[:, selected_features]
-    X_test_sel = X_test[:, selected_features]
+    """
+    Calculate the fitness of an individual by training an SVM classifier and
+    evaluating its performance using accuracy.
+    """
+    # print(f'individual: {individual}')
+    selected_bands = list(np.nonzero(individual)[0])
+
+    X_train_sel = [
+        segment[selected_bands, :, :].reshape(-1) for segment in X_train
+    ]
+    # print(f'X_train_sel[0].shape: {X_train_sel[0].shape}')
+    X_test_sel = [
+        segment[selected_bands, :, :].reshape(-1) for segment in X_test
+    ]
 
     clf = SVC()
     clf.fit(X_train_sel, y_train)
@@ -121,10 +132,10 @@ X_val, X_test, y_val, y_test = train_test_split(X_val, y_val, test_size=0.5)
 
 # call the genetic algorithm
 num_best = 5
-population_size = 50
-num_generations = 10
-num_parents = 15
-num_offspring = 20
+population_size = 20
+num_generations = 20
+num_parents = 10
+num_offspring = 5
 
 best_individuals, best_fitnesses = genetic_algorithm(X_train, X_val, y_train,
                                                      y_val, population_size,
@@ -136,7 +147,7 @@ data = []
 for i in range(num_best):
     test_result = calculate_fitness(best_individuals[i], X_train, X_test,
                                     y_train, y_test)
-    bands = np.nonzero(np.array(best_individuals[i]) + 1)
+    bands = np.array(np.nonzero(best_individuals[i])) + 1
     individual_str = ''.join(str(band) for band in bands)
     data.append({
         "Individual": individual_str,
