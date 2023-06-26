@@ -8,20 +8,13 @@ import pandas as pd
 
 
 def generate_individual(num_features):
-    """
-    Generate a random individual
-    """
     individual = [random.randint(0, 1) for _ in range(num_features)]
     while sum(individual) == 0:
         individual = [random.randint(0, 1) for _ in range(num_features)]
-
     return individual
 
 
 def generate_population(population_size, num_features):
-    """
-    Generate a population of 'population_size' individuals.
-    """
     return [generate_individual(num_features) for _ in range(population_size)]
 
 
@@ -48,9 +41,6 @@ def calculate_fitness(individual, X_train, X_test, y_train, y_test):
 
 
 def evaluate_population(population, X_train, X_test, y_train, y_test):
-    """
-    Evaluate the fitness of each individual in the population.
-    """
     return [
         calculate_fitness(individual, X_train, X_test, y_train, y_test)
         for individual in population
@@ -58,48 +48,25 @@ def evaluate_population(population, X_train, X_test, y_train, y_test):
 
 
 def select_individuals(population, scores, num_parents):
-    """
-    Select the top 'num_parents' individuals based on their fitness scores.
-    """
-    selected_parents = []
     sorted_indices = sorted(range(len(scores)),
                             key=lambda k: scores[k],
                             reverse=True)
-
-    for i in range(num_parents):
-        selected_parents.append(population[sorted_indices[i]])
-
-    return selected_parents
+    return [population[i] for i in sorted_indices[:num_parents]]
 
 
-def crossover(parents, offspring_size):
-    """
-    Perform crossover to create 'offspring_size' new individuals.
-    """
+def estimate_distribution(selected_individuals, num_features):
+    distribution = np.zeros(num_features)
+    for individual in selected_individuals:
+        distribution += np.array(individual)
+    return distribution / len(selected_individuals)
+
+
+def generate_offspring(parents, num_offspring, distribution):
     offspring = []
-
-    for _ in range(offspring_size):
-        parent1 = random.choice(parents)
-        parent2 = random.choice(parents)
-
-        half = len(parent1) // 2
-        offspring.append(parent1[:half] + parent2[half:])
-
+    for _ in range(num_offspring):
+        individual = [int(np.random.uniform() < prob) for prob in distribution]
+        offspring.append(individual)
     return offspring
-
-
-def mutation(offspring):
-    """
-    Perform mutation by flipping a random bit in each individual.
-    """
-    mutated_offspring = []
-
-    for individual in offspring:
-        index = random.randint(0, len(individual) - 1)
-        individual[index] = 1 - individual[index]
-        mutated_offspring.append(individual)
-
-    return mutated_offspring
 
 
 def genetic_algorithm(X_train,
@@ -124,11 +91,8 @@ def genetic_algorithm(X_train,
         # Select parents
         parents = select_individuals(population, scores, num_parents)
 
-        # Create offspring through crossover
-        offspring = crossover(parents, num_offspring)
-
-        # Perform mutation
-        offspring = mutation(offspring)
+        distribution = estimate_distribution(parents, num_features)
+        offspring = generate_offspring(parents, num_offspring, distribution)
 
         # Replace the population with offspring
         population = parents + offspring
@@ -164,27 +128,23 @@ X_train, X_val, y_train, y_val = train_test_split(X_all, y_all, test_size=0.4)
 X_val, X_test, y_val, y_test = train_test_split(X_val, y_val, test_size=0.5)
 
 # call the genetic algorithm
-num_best = 5
-population_size = 50
-num_generations = 10
-num_parents = 15
-num_offspring = 20
+num_best = 10
+population_size = 20
+num_generations = 20
+num_parents = 10
+num_offspring = 5
 
 best_individuals, best_fitnesses = genetic_algorithm(X_train, X_val, y_train,
                                                      y_val, population_size,
                                                      num_generations,
                                                      num_parents,
-                                                     num_offspring)
+                                                     num_offspring, num_best)
 
 data = []
 for i in range(num_best):
-    # print(f"Individual #{i+1}: {best_individuals[i]}")
-    # print(f"With fitness: {best_fitnesses[i] :.3f}")
     test_result = calculate_fitness(best_individuals[i], X_train, X_test,
                                     y_train, y_test)
-    # print(f'And test accuracy: {test_result :.3f}')
-    # print()
-    bands = np.nonzero(np.array(best_individuals[i]) + 1)
+    bands = np.array(np.nonzero(best_individuals[i])) + 1
     individual_str = ''.join(str(band) for band in bands)
     data.append({
         "Individual": individual_str,
