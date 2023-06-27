@@ -61,23 +61,21 @@ def estimate_distribution(selected_individuals, num_features):
     return distribution / len(selected_individuals)
 
 
-def generate_offspring(parents, num_offspring, distribution):
+def generate_offspring(parents, num_offspring, distribution, inf_lim, sup_lim):
     offspring = []
     for _ in range(num_offspring):
-        individual = [int(np.random.uniform() < prob) for prob in distribution]
+        individual = [int(inf_lim < prob < sup_lim) for prob in distribution]
+        if sum(individual) == 0:
+            random_band = np.random.randint(0, 7, 3)
+            for a in random_band:
+                individual[a] = 1
         offspring.append(individual)
     return offspring
 
 
-def genetic_algorithm(X_train,
-                      X_test,
-                      y_train,
-                      y_test,
-                      population_size,
-                      num_generations,
-                      num_parents,
-                      num_offspring,
-                      num_best=5):
+def genetic_algorithm(X_train, X_test, y_train, y_test, population_size,
+                      num_generations, num_parents, num_offspring, inf_lim,
+                      sup_lim):
     num_features = X_train[0].shape[0]
     population = generate_population(population_size, num_features)
 
@@ -92,24 +90,23 @@ def genetic_algorithm(X_train,
         parents = select_individuals(population, scores, num_parents)
 
         distribution = estimate_distribution(parents, num_features)
-        offspring = generate_offspring(parents, num_offspring, distribution)
+        offspring = generate_offspring(parents, num_offspring, distribution,
+                                       inf_lim, sup_lim)
 
         # Replace the population with offspring
         population = parents + offspring
 
     # Get the final fitness scores
+    scores_df = pd.DataFrame()
     scores = evaluate_population(population, X_train, X_test, y_train, y_test)
-
-    # print(f'scores: {scores}')
+    scores_df['Individual'] = population
+    scores_df['Val accuracy'] = scores
 
     # Select the best individuals
-    best_indices = sorted(range(len(scores)),
-                          key=lambda k: scores[k],
-                          reverse=True)[:num_best]
-    best_individuals = [population[i] for i in best_indices]
-    best_fitnesses = [scores[i] for i in best_indices]
+    final_best_individuals = scores_df.sort_values(by='Val accuracy',
+                                                   ascending=False)
 
-    return best_individuals, best_fitnesses
+    return final_best_individuals
 
 
 # Loading dataset
@@ -129,28 +126,18 @@ X_val, X_test, y_val, y_test = train_test_split(X_val, y_val, test_size=0.5)
 
 # call the genetic algorithm
 num_best = 10
-population_size = 20
-num_generations = 20
+population_size = 50
+num_generations = 5
 num_parents = 10
-num_offspring = 5
+num_offspring = 20
+inf_lim = 0.2
+sup_lim = 0.85
 
-best_individuals, best_fitnesses = genetic_algorithm(X_train, X_val, y_train,
-                                                     y_val, population_size,
-                                                     num_generations,
-                                                     num_parents,
-                                                     num_offspring, num_best)
+results = genetic_algorithm(X_train, X_val, y_train, y_val, population_size,
+                            num_generations, num_parents, num_offspring,
+                            num_best, inf_lim, sup_lim)
 
-data = []
-for i in range(num_best):
-    test_result = calculate_fitness(best_individuals[i], X_train, X_test,
-                                    y_train, y_test)
-    bands = np.array(np.nonzero(best_individuals[i])) + 1
-    individual_str = ''.join(str(band) for band in bands)
-    data.append({
-        "Individual": individual_str,
-        "Fitness": best_fitnesses[i],
-        "Test acc": test_result
-    })
+results['Test accuracy'] = results['individual'].apply(
+    lambda ind: calculate_fitness(ind, X_train, X_test, y_train, y_test))
 
-data = pd.DataFrame.from_records(data)
-print(data.sort_values(by='Test acc', ascending=False))
+print(results.sort_values(by='Test accuracy', ascending=False))
