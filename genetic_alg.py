@@ -80,7 +80,7 @@ def genetic_algorithm(X_train, X_test, y_train, y_test, population_size,
     population = generate_population(population_size, num_features)
 
     for generation in range(num_generations):
-        print("Generation", generation + 1)
+        print(f"Generation {generation + 1 :02d}")
 
         # Evaluate fitness
         scores = evaluate_population(population, X_train, X_test, y_train,
@@ -126,18 +126,18 @@ X_val, X_test, y_val, y_test = train_test_split(X_val, y_val, test_size=0.5)
 
 # call the genetic algorithm
 num_best = 10
-population_size = 50
-num_generations = 5
+population_size = 40
+num_generations = 50
 num_parents = 10
-num_offspring = 20
+num_offspring = 30
 inf_lim = 0.2
 sup_lim = 0.85
 
 results = genetic_algorithm(X_train, X_val, y_train, y_val, population_size,
                             num_generations, num_parents, num_offspring,
-                            num_best, inf_lim, sup_lim)
+                            inf_lim, sup_lim)
 
-results['Test accuracy'] = results['individual'].apply(
+results['Test accuracy'] = results['Individual'].apply(
     lambda ind: calculate_fitness(ind, X_train, X_test, y_train, y_test))
 
-print(results.sort_values(by='Test accuracy', ascending=False))
+print(results.sort_values(by='Test accuracy', ascending=False).head(num_best))
