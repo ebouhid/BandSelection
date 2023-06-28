@@ -46,6 +46,7 @@ def evaluate_population(population, X_train, X_test, y_train, y_test):
         for individual in population
     ]
 
+
 def crossover(parents, offspring_size):
     """
     Perform crossover to create 'offspring_size' new individuals.
@@ -79,14 +80,18 @@ def mutation(offspring):
 
     return mutated_offspring
 
+
 def select_individuals(population, scores, num_parents):
     sorted_indices = sorted(range(len(scores)),
                             key=lambda k: scores[k],
                             reverse=True)
-    
-    selected_individuals = [population[i] for i in sorted_indices[:num_parents]]
 
-    return crossover(selected_individuals,num_parents)
+    selected_individuals = [
+        population[i] for i in sorted_indices[:num_parents]
+    ]
+
+    return crossover(selected_individuals, num_parents)
+
 
 def estimate_distribution(selected_individuals, num_features):
     distribution = np.zeros(num_features)
@@ -146,11 +151,11 @@ def genetic_algorithm(X_train, X_test, y_train, y_test, population_size,
 # Loading dataset
 X_all = []
 y_all = []
-for path in glob.glob('/content/drive/MyDrive/Arquivos de UCs/UCs/7 semestre/IA/Projeto Final/forest/*'):
+for path in glob.glob('data/dataset_v2/forest/*'):
     X_all.append(np.load(path))
     y_all.append(0)
 
-for path in glob.glob('/content/drive/MyDrive/Arquivos de UCs/UCs/7 semestre/IA/Projeto Final/non_forest/*'):
+for path in glob.glob('data/dataset_v2/non_forest/*'):
     X_all.append(np.load(path))
     y_all.append(1)
 
