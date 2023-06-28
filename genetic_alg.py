@@ -46,13 +46,47 @@ def evaluate_population(population, X_train, X_test, y_train, y_test):
         for individual in population
     ]
 
+def crossover(parents, offspring_size):
+    """
+    Perform crossover to create 'offspring_size' new individuals.
+    """
+    offspring = []
+
+    for _ in range(offspring_size):
+        parent1 = random.choice(parents)
+        parent2 = random.choice(parents)
+
+        half = len(parent1) // 2
+        offspring.append(parent1[:half] + parent2[half:])
+
+    return offspring
+
+
+def mutation(offspring):
+    """
+    Perform mutation by flipping a random bit in each individual.
+    """
+    mutated_offspring = []
+
+    for individual in offspring:
+        index = random.randint(0, len(individual) - 1)
+        individual[index] = 1 - individual[index]
+        if sum(individual) == 0:
+            random_band = np.random.randint(0, 7, 3)
+            for a in random_band:
+                individual[a] = 1
+        mutated_offspring.append(individual)
+
+    return mutated_offspring
 
 def select_individuals(population, scores, num_parents):
     sorted_indices = sorted(range(len(scores)),
                             key=lambda k: scores[k],
                             reverse=True)
-    return [population[i] for i in sorted_indices[:num_parents]]
+    
+    selected_individuals = [population[i] for i in sorted_indices[:num_parents]]
 
+    return crossover(selected_individuals,num_parents)
 
 def estimate_distribution(selected_individuals, num_features):
     distribution = np.zeros(num_features)
@@ -70,7 +104,7 @@ def generate_offspring(parents, num_offspring, distribution, inf_lim, sup_lim):
             for a in random_band:
                 individual[a] = 1
         offspring.append(individual)
-    return offspring
+    return mutation(offspring)
 
 
 def genetic_algorithm(X_train, X_test, y_train, y_test, population_size,
@@ -112,11 +146,11 @@ def genetic_algorithm(X_train, X_test, y_train, y_test, population_size,
 # Loading dataset
 X_all = []
 y_all = []
-for path in glob.glob('data/dataset_v2/forest/*'):
+for path in glob.glob('/content/drive/MyDrive/Arquivos de UCs/UCs/7 semestre/IA/Projeto Final/forest/*'):
     X_all.append(np.load(path))
     y_all.append(0)
 
-for path in glob.glob('data/dataset_v2/non_forest/*'):
+for path in glob.glob('/content/drive/MyDrive/Arquivos de UCs/UCs/7 semestre/IA/Projeto Final/non_forest/*'):
     X_all.append(np.load(path))
     y_all.append(1)
 
@@ -126,10 +160,10 @@ X_val, X_test, y_val, y_test = train_test_split(X_val, y_val, test_size=0.5)
 
 # call the genetic algorithm
 num_best = 10
-population_size = 40
-num_generations = 50
+population_size = 50
+num_generations = 40
 num_parents = 10
-num_offspring = 30
+num_offspring = 20
 inf_lim = 0.2
 sup_lim = 0.85
 
