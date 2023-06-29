@@ -1,6 +1,6 @@
 import random
 from sklearn.svm import SVC
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import balanced_accuracy_score
 from sklearn.model_selection import train_test_split
 import glob
 import numpy as np
@@ -37,7 +37,7 @@ def calculate_fitness(individual, X_train, X_test, y_train, y_test):
     clf = SVC()
     clf.fit(X_train_sel, y_train)
     y_pred = clf.predict(X_test_sel)
-    return accuracy_score(y_test, y_pred)
+    return balanced_accuracy_score(y_test, y_pred)
 
 
 def evaluate_population(population, X_train, X_test, y_train, y_test):
@@ -151,11 +151,11 @@ def genetic_algorithm(X_train, X_test, y_train, y_test, population_size,
 # Loading dataset
 X_all = []
 y_all = []
-for path in glob.glob('data/dataset_v2/forest/*'):
+for path in glob.glob('data/dataset_v3/forest/*'):
     X_all.append(np.load(path))
     y_all.append(0)
 
-for path in glob.glob('data/dataset_v2/non_forest/*'):
+for path in glob.glob('data/dataset_v3/non_forest/*'):
     X_all.append(np.load(path))
     y_all.append(1)
 
