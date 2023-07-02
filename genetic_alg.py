@@ -5,6 +5,7 @@ from sklearn.model_selection import train_test_split
 import glob
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 
 
 def generate_individual(num_features):
@@ -34,7 +35,7 @@ def calculate_fitness(individual, X_train, X_test, y_train, y_test):
         segment[selected_bands, :, :].reshape(-1) for segment in X_test
     ]
 
-    clf = SVC()
+    clf = SVC(kernel='linear')
     clf.fit(X_train_sel, y_train)
     y_pred = clf.predict(X_test_sel)
     return balanced_accuracy_score(y_test, y_pred)
@@ -118,8 +119,10 @@ def genetic_algorithm(X_train, X_test, y_train, y_test, population_size,
     num_features = X_train[0].shape[0]
     population = generate_population(population_size, num_features)
 
-    for generation in range(num_generations):
-        print(f"Generation {generation + 1 :02d}")
+    loop = tqdm(range(num_generations))
+
+    for generation in loop:
+        # print(f"Generation {generation + 1 :02d}")
 
         # Evaluate fitness
         scores = evaluate_population(population, X_train, X_test, y_train,
@@ -160,16 +163,16 @@ for path in glob.glob('data/dataset_v3/non_forest/*'):
     y_all.append(1)
 
 # perform split
-X_train, X_val, y_train, y_val = train_test_split(X_all, y_all, test_size=0.4)
+X_train, X_val, y_train, y_val = train_test_split(X_all, y_all, test_size=0.3)
 X_val, X_test, y_val, y_test = train_test_split(X_val, y_val, test_size=0.5)
 
 # call the genetic algorithm
 num_best = 10
-population_size = 50
-num_generations = 40
+population_size = 80
+num_generations = 30
 num_parents = 10
 num_offspring = 20
-inf_lim = 0.2
+inf_lim = 0.25
 sup_lim = 0.85
 
 results = genetic_algorithm(X_train, X_val, y_train, y_val, population_size,
