@@ -35,7 +35,7 @@ def calculate_fitness(individual, X_train, X_test, y_train, y_test):
         segment[selected_bands, :, :].reshape(-1) for segment in X_test
     ]
 
-    clf = SVC(kernel='linear')
+    clf = SVC(C=100, gamma='scale', kernel='rbf', class_weight='balanced')
     clf.fit(X_train_sel, y_train)
     y_pred = clf.predict(X_test_sel)
     return balanced_accuracy_score(y_test, y_pred)
