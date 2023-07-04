@@ -17,4 +17,4 @@ sua apresentação, que se encontra no youtube.
 
 ## Link adicionais:
 
-[Apresentação do Youtube](https://www.youtube.com/)
+[Apresentação do Youtube](https://youtu.be/KsY-Pd83eJQ)
