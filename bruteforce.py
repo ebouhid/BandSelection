@@ -63,6 +63,8 @@ if __name__ == "__main__":
 
         results.append(test_data)
 
-    results_df = pd.DataFrame.from_records(results)
+    results_df = pd.DataFrame.from_records(results).sort_values(
+        by='Balanced Accuracy', ascending=False)
 
-    print(results_df.sort_values(by='Balanced Accuracy', ascending=False))
+    print(results_df)
+    results_df.to_csv('results_bruteforce.csv', index=False)
