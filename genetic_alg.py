@@ -110,6 +110,10 @@ def generate_offspring(parents, num_offspring, distribution, inf_lim, sup_lim):
             for a in random_band:
                 individual[a] = 1
         offspring.append(individual)
+
+    # Remove duplicates from offspring
+    offspring = list(map(list, set(map(tuple, offspring))))
+
     return mutation(offspring)
 
 
@@ -154,11 +158,11 @@ def genetic_algorithm(X_train, X_test, y_train, y_test, population_size,
 # Loading dataset
 X_all = []
 y_all = []
-for path in glob.glob('data/dataset_v3/forest/*'):
+for path in glob.glob('data/dataset_v3-467/forest/*'):
     X_all.append(np.load(path))
     y_all.append(0)
 
-for path in glob.glob('data/dataset_v3/non_forest/*'):
+for path in glob.glob('data/dataset_v3-467/non_forest/*'):
     X_all.append(np.load(path))
     y_all.append(1)
 
