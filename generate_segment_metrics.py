@@ -84,12 +84,13 @@ for composition in compositions:
                               pixel[1] - minc] = truth[pixel[0], pixel[1]]
             hor = get_hor(segment_truth)
             classification = get_major_class(np.uint8(segment_truth))
-            all_segments.append({
-                "Segment_label": prop.label,
-                "HoR": hor,
-                "Class": classification,
-                "Region": f'x{idx + 1 :02d}'
-            })
+            if classification in ['forest', 'non forest']:
+                all_segments.append({
+                    "Segment_label": prop.label,
+                    "HoR": hor,
+                    "Class": classification,
+                    "Region": f'x{idx + 1 :02d}'
+                })
 
     df = pd.DataFrame.from_records(all_segments)
 
