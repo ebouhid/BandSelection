@@ -32,18 +32,19 @@ if __name__ == "__main__":
     # Loading dataset
     X_all = []
     y_all = []
-    for path in glob.glob('data/dataset_v3/forest/*'):
+    for path in glob.glob('data/dataset_v3-467/forest/*'):
         X_all.append(np.load(path))
         y_all.append(0)
 
-    for path in glob.glob('data/dataset_v3/non_forest/*'):
+    for path in glob.glob('data/dataset_v3-467/non_forest/*'):
         X_all.append(np.load(path))
         y_all.append(1)
 
     # perform split
     X_train, X_test, y_train, y_test = train_test_split(X_all,
                                                         y_all,
-                                                        test_size=0.3)
+                                                        test_size=0.3,
+                                                        random_state=42)
 
     # Generate all possible combinations of 7-element arrays consisting of 0s and 1s
     combinations = np.array(list(np.ndindex((2, ) * 7)))

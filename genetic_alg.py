@@ -168,8 +168,14 @@ for path in glob.glob('data/dataset_v3-467/non_forest/*'):
     y_all.append(1)
 
 # perform split
-X_train, X_val, y_train, y_val = train_test_split(X_all, y_all, test_size=0.3)
-X_val, X_test, y_val, y_test = train_test_split(X_val, y_val, test_size=0.5)
+X_train, X_val, y_train, y_val = train_test_split(X_all,
+                                                  y_all,
+                                                  test_size=0.3,
+                                                  random_state=42)
+X_val, X_test, y_val, y_test = train_test_split(X_val,
+                                                y_val,
+                                                test_size=0.5,
+                                                random_state=43)
 
 # call the genetic algorithm
 num_best = 10
