@@ -2,3 +2,6 @@
 balanced.ipynb
 *.tar.gz
 *.csv
+article_imgs
+gridsearch_test.ipynb
+slic_performance_analysis.ipynb

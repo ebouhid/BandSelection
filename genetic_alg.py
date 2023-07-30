@@ -74,7 +74,9 @@ def mutation(offspring):
         index = random.randint(0, len(individual) - 1)
         individual[index] = 1 - individual[index]
         if sum(individual) == 0:
-            individual = generate_individual(len(individual))
+            random_band = np.random.randint(0, 7, 3)
+            for a in random_band:
+                individual[a] = 1
         mutated_offspring.append(individual)
 
     return mutated_offspring
@@ -99,19 +101,15 @@ def estimate_distribution(selected_individuals, num_features):
     return distribution / len(selected_individuals)
 
 
-def generate_offspring(parents, num_offspring, distribution, inf_lim, sup_lim,
-                       unique_individuals):
+def generate_offspring(parents, num_offspring, distribution, inf_lim, sup_lim):
     offspring = []
     for _ in range(num_offspring):
         individual = [int(inf_lim < prob < sup_lim) for prob in distribution]
         if sum(individual) == 0:
-            individual = generate_individual(len(individual))
-
-        individual_tuple = tuple(individual)
-        if individual_tuple not in unique_individuals:
-            offspring.append(individual)
-            unique_individuals.add(individual_tuple)
-
+            random_band = np.random.randint(0, 7, 3)
+            for a in random_band:
+                individual[a] = 1
+        offspring.append(individual)
     return mutation(offspring)
 
 
@@ -123,9 +121,6 @@ def genetic_algorithm(X_train, X_test, y_train, y_test, population_size,
 
     loop = tqdm(range(num_generations))
 
-    # Keep track of unique individuals across generations
-    unique_individuals = set(map(tuple, population))
-
     for generation in loop:
         # Evaluate fitness
         scores = evaluate_population(population, X_train, X_test, y_train,
@@ -135,12 +130,10 @@ def genetic_algorithm(X_train, X_test, y_train, y_test, population_size,
         parents = select_individuals(population, scores, num_parents)
 
         distribution = estimate_distribution(parents, num_features)
-
-        # Generate offspring while ensuring uniqueness
         offspring = generate_offspring(parents, num_offspring, distribution,
-                                       inf_lim, sup_lim, unique_individuals)
+                                       inf_lim, sup_lim)
 
-        # Replace the population with parents and unique offspring
+        # Replace the population with offspring
         population = parents + offspring
 
     # Get the final fitness scores
@@ -159,11 +152,11 @@ def genetic_algorithm(X_train, X_test, y_train, y_test, population_size,
 # Loading dataset
 X_all = []
 y_all = []
-for path in glob.glob('data/dataset_v3-467/forest/*'):
+for path in glob.glob('data/dataset_v3-pca/forest/*'):
     X_all.append(np.load(path))
     y_all.append(0)
 
-for path in glob.glob('data/dataset_v3-467/non_forest/*'):
+for path in glob.glob('data/dataset_v3-pca/non_forest/*'):
     X_all.append(np.load(path))
     y_all.append(1)
 

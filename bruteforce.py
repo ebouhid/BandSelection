@@ -4,6 +4,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
 import glob
 import pandas as pd
+from tqdm import tqdm
 
 
 def evaluate_combination(combination, X_train, X_test, y_train, y_test):
@@ -41,10 +42,14 @@ if __name__ == "__main__":
         y_all.append(1)
 
     # perform split
-    X_train, X_test, y_train, y_test = train_test_split(X_all,
-                                                        y_all,
-                                                        test_size=0.3,
-                                                        random_state=42)
+    X_train, X_val, y_train, y_val = train_test_split(X_all,
+                                                      y_all,
+                                                      test_size=0.3,
+                                                      random_state=42)
+    X_val, X_test, y_val, y_test = train_test_split(X_val,
+                                                    y_val,
+                                                    test_size=0.5,
+                                                    random_state=43)
 
     # Generate all possible combinations of 7-element arrays consisting of 0s and 1s
     combinations = np.array(list(np.ndindex((2, ) * 7)))
@@ -52,8 +57,8 @@ if __name__ == "__main__":
     results = []
 
     combinations = combinations[1:]  # remove all 0s combination
-
-    for combination in combinations:
+    loop = tqdm(combinations)
+    for combination in loop:
         combination_string = ''.join([str(x) for x in combination])
         b_acc = evaluate_combination(combination, X_train, X_test, y_train,
                                      y_test)
