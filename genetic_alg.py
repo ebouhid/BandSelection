@@ -6,6 +6,14 @@ import glob
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
+import sys
+
+# Get command line arguments
+seed = int(sys.argv[1])
+comp = str(sys.argv[2])
+
+# Set random seed
+np.random.seed(seed)
 
 
 def generate_individual(num_features):
@@ -157,11 +165,11 @@ def genetic_algorithm(X_train, X_test, y_train, y_test, population_size,
 # Loading dataset
 X_all = []
 y_all = []
-for path in glob.glob('data/dataset_v3-pca/forest/*'):
+for path in glob.glob(f'data/dataset_v3-{comp}/forest/*'):
     X_all.append(np.load(path))
     y_all.append(0)
 
-for path in glob.glob('data/dataset_v3-pca/non_forest/*'):
+for path in glob.glob(f'data/dataset_v3-{comp}/non_forest/*'):
     X_all.append(np.load(path))
     y_all.append(1)
 
@@ -169,16 +177,16 @@ for path in glob.glob('data/dataset_v3-pca/non_forest/*'):
 X_train, X_val, y_train, y_val = train_test_split(X_all,
                                                   y_all,
                                                   test_size=0.3,
-                                                  random_state=42)
+                                                  random_state=seed)
 X_val, X_test, y_val, y_test = train_test_split(X_val,
                                                 y_val,
                                                 test_size=0.5,
-                                                random_state=43)
+                                                random_state=seed + 1)
 
 # call the genetic algorithm
 num_best = 10
-population_size = 50
-num_generations = 30
+population_size = 20
+num_generations = 50
 num_parents = 10
 num_offspring = 20
 inf_lim = 0.25

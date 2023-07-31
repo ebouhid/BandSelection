@@ -5,6 +5,14 @@ from sklearn.svm import SVC
 import glob
 import pandas as pd
 from tqdm import tqdm
+import sys
+
+# Get command line arguments
+seed = int(sys.argv[1])
+comp = str(sys.argv[2])
+
+# Set random seed
+np.random.seed(seed)
 
 
 def evaluate_combination(combination, X_train, X_test, y_train, y_test):
@@ -33,11 +41,11 @@ if __name__ == "__main__":
     # Loading dataset
     X_all = []
     y_all = []
-    for path in glob.glob('data/dataset_v3-pca/forest/*'):
+    for path in glob.glob(f'data/dataset_v3-{comp}/forest/*'):
         X_all.append(np.load(path))
         y_all.append(0)
 
-    for path in glob.glob('data/dataset_v3-pca/non_forest/*'):
+    for path in glob.glob(f'data/dataset_v3-{comp}/non_forest/*'):
         X_all.append(np.load(path))
         y_all.append(1)
 
@@ -45,11 +53,11 @@ if __name__ == "__main__":
     X_train, X_val, y_train, y_val = train_test_split(X_all,
                                                       y_all,
                                                       test_size=0.3,
-                                                      random_state=42)
+                                                      random_state=seed)
     X_val, X_test, y_val, y_test = train_test_split(X_val,
                                                     y_val,
                                                     test_size=0.5,
-                                                    random_state=43)
+                                                    random_state=seed + 1)
 
     # Generate all possible combinations of 7-element arrays consisting of 0s and 1s
     combinations = np.array(list(np.ndindex((2, ) * 7)))
