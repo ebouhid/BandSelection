@@ -7,10 +7,12 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 import sys
+import logging
 
 # Get command line arguments
-seed = int(sys.argv[1])
-comp = str(sys.argv[2])
+exp_name = str(sys.argv[1])
+seed = int(sys.argv[2])
+comp = str(sys.argv[3])
 
 # Set random seed
 np.random.seed(seed)
@@ -94,7 +96,7 @@ def mutation(offspring, mut_prob):
     return mutated_offspring
 
 
-def select_individuals(population, scores, num_parents, xover_prob):
+def select_individuals(population, scores, num_parents):
     sorted_indices = sorted(range(len(scores)),
                             key=lambda k: scores[k],
                             reverse=True)
@@ -103,7 +105,7 @@ def select_individuals(population, scores, num_parents, xover_prob):
         population[i] for i in sorted_indices[:num_parents]
     ]
 
-    return crossover(selected_individuals, num_parents, xover_prob)
+    return selected_individuals
 
 
 def estimate_distribution(selected_individuals, num_features):
@@ -114,7 +116,7 @@ def estimate_distribution(selected_individuals, num_features):
 
 
 def generate_offspring(parents, num_offspring, distribution, inf_lim, sup_lim,
-                       mut_prob):
+                       mut_prob, xover_prob):
     offspring = []
     for _ in range(num_offspring):
         individual = [int(inf_lim < prob < sup_lim) for prob in distribution]
@@ -122,7 +124,8 @@ def generate_offspring(parents, num_offspring, distribution, inf_lim, sup_lim,
         if sum(individual) == 0:
             individual = generate_individual(len(individual))
         offspring.append(individual)
-    return mutation(offspring, mut_prob)
+    spawn_individuals = crossover(offspring, num_offspring, xover_prob)
+    return mutation(spawn_individuals, mut_prob)
 
 
 def genetic_algorithm(X_train, X_test, y_train, y_test, population_size,
@@ -131,6 +134,19 @@ def genetic_algorithm(X_train, X_test, y_train, y_test, population_size,
     num_features = X_train[0].shape[0]
     population = generate_population(population_size, num_features)
 
+    logging.basicConfig(filename=f'results/{exp_name}/logfile.out',
+                        level=logging.INFO)
+    # Logging experiment settings
+    logging.info(f'Seed: {seed}')
+    logging.info(f'Population size: {population_size}')
+    logging.info(f'Number of generations: {num_generations}')
+    logging.info(f'Number of parents: {num_parents}')
+    logging.info(f'Number of offspring: {num_offspring}')
+    logging.info(f'Inferior limit: {inf_lim}')
+    logging.info(f'Superior limit: {sup_lim}')
+    logging.info(f'Mutation probability: {mut_prob}')
+    logging.info(f'Crossover probability: {xover_prob}')
+
     loop = tqdm(range(num_generations))
 
     for generation in loop:
@@ -138,13 +154,21 @@ def genetic_algorithm(X_train, X_test, y_train, y_test, population_size,
         scores = evaluate_population(population, X_train, X_test, y_train,
                                      y_test)
 
+        # Log the 3 best individuals
+        scores_df = pd.DataFrame()
+        scores_df['Individual'] = population
+        scores_df['Val accuracy'] = scores
+        scores_df = scores_df.sort_values(by='Val accuracy', ascending=False)
+        logging.info(f'Generation {generation}')
+        logging.info(scores_df.head(3))
+        logging.info('')
+
         # Select parents
-        parents = select_individuals(population, scores, num_parents,
-                                     xover_prob)
+        parents = select_individuals(population, scores, num_parents)
 
         distribution = estimate_distribution(parents, num_features)
         offspring = generate_offspring(parents, num_offspring, distribution,
-                                       inf_lim, sup_lim, mut_prob)
+                                       inf_lim, sup_lim, mut_prob, xover_prob)
 
         # Replace the population with offspring
         population = parents + offspring
@@ -189,10 +213,10 @@ population_size = 20
 num_generations = 50
 num_parents = 10
 num_offspring = 20
-inf_lim = 0.25
-sup_lim = 0.90
-mut_prob = 0.3
-xover_prob = 0.5
+inf_lim = 0.05
+sup_lim = 0.95
+mut_prob = 1
+xover_prob = 1
 
 results = genetic_algorithm(X_train, X_val, y_train, y_val, population_size,
                             num_generations, num_parents, num_offspring,
