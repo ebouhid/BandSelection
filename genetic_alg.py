@@ -73,10 +73,9 @@ def mutation(offspring):
     for individual in offspring:
         index = random.randint(0, len(individual) - 1)
         individual[index] = 1 - individual[index]
+        # preventing null individuals (all zeroes)
         if sum(individual) == 0:
-            random_band = np.random.randint(0, 7, 3)
-            for a in random_band:
-                individual[a] = 1
+            individual = generate_individual(len(individual))
         mutated_offspring.append(individual)
 
     return mutated_offspring
@@ -105,10 +104,9 @@ def generate_offspring(parents, num_offspring, distribution, inf_lim, sup_lim):
     offspring = []
     for _ in range(num_offspring):
         individual = [int(inf_lim < prob < sup_lim) for prob in distribution]
+        # preventing null individual (all zeroes)
         if sum(individual) == 0:
-            random_band = np.random.randint(0, 7, 3)
-            for a in random_band:
-                individual[a] = 1
+            individual = generate_individual(len(individual))
         offspring.append(individual)
     return mutation(offspring)
 
@@ -172,12 +170,12 @@ X_val, X_test, y_val, y_test = train_test_split(X_val,
 
 # call the genetic algorithm
 num_best = 10
-population_size = 80
+population_size = 50
 num_generations = 30
 num_parents = 10
 num_offspring = 20
 inf_lim = 0.25
-sup_lim = 0.85
+sup_lim = 0.90
 
 results = genetic_algorithm(X_train, X_val, y_train, y_val, population_size,
                             num_generations, num_parents, num_offspring,
