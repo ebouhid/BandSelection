@@ -119,7 +119,12 @@ def generate_offspring(parents, num_offspring, distribution, inf_lim, sup_lim,
                        mut_prob, xover_prob):
     offspring = []
     for _ in range(num_offspring):
-        individual = [int(inf_lim < prob < sup_lim) for prob in distribution]
+        for i in range(len(distribution)):
+            distribution[i] = distribution[i] if (
+                inf_lim < distribution[i] < sup_lim) else 0
+        individual = [
+            random.choices([0, 1], weights=[1 - p, p])[0] for p in distribution
+        ]
         # preventing null individual (all zeroes)
         if sum(individual) == 0:
             individual = generate_individual(len(individual))
@@ -134,7 +139,7 @@ def genetic_algorithm(X_train, X_test, y_train, y_test, population_size,
     num_features = X_train[0].shape[0]
     population = generate_population(population_size, num_features)
 
-    logging.basicConfig(filename=f'results/{exp_name}/logfile.out',
+    logging.basicConfig(filename=f'results/{exp_name}/logfile-{seed}.out',
                         level=logging.INFO)
     # Logging experiment settings
     logging.info(f'Seed: {seed}')
@@ -215,8 +220,8 @@ num_parents = 10
 num_offspring = 20
 inf_lim = 0.05
 sup_lim = 0.95
-mut_prob = 1
-xover_prob = 1
+mut_prob = 0
+xover_prob = 0
 
 results = genetic_algorithm(X_train, X_val, y_train, y_val, population_size,
                             num_generations, num_parents, num_offspring,
