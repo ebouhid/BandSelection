@@ -48,7 +48,7 @@ def evaluate_population(population, X_train, X_test, y_train, y_test):
     ]
 
 
-def crossover(parents, offspring_size):
+def crossover(parents, offspring_size, xover_prob):
     """
     Perform crossover to create 'offspring_size' new individuals.
     """
@@ -59,29 +59,34 @@ def crossover(parents, offspring_size):
         parent2 = random.choice(parents)
 
         half = len(parent1) // 2
-        offspring.append(parent1[:half] + parent2[half:])
+        spawn = parent1[:half] + parent2[half:]
+        if random.random() < xover_prob:
+            offspring.append(spawn)
+        else:
+            offspring.append(random.choice([parent1, parent2]))
 
     return offspring
 
 
-def mutation(offspring):
+def mutation(offspring, mut_prob):
     """
     Perform mutation by flipping a random bit in each individual.
     """
     mutated_offspring = []
 
     for individual in offspring:
-        index = random.randint(0, len(individual) - 1)
-        individual[index] = 1 - individual[index]
-        # preventing null individuals (all zeroes)
-        if sum(individual) == 0:
-            individual = generate_individual(len(individual))
-        mutated_offspring.append(individual)
+        if random.random() < mut_prob:
+            index = random.randint(0, len(individual) - 1)
+            individual[index] = 1 - individual[index]
+            # preventing null individuals (all zeroes)
+            if sum(individual) == 0:
+                individual = generate_individual(len(individual))
+            mutated_offspring.append(individual)
 
     return mutated_offspring
 
 
-def select_individuals(population, scores, num_parents):
+def select_individuals(population, scores, num_parents, xover_prob):
     sorted_indices = sorted(range(len(scores)),
                             key=lambda k: scores[k],
                             reverse=True)
@@ -90,7 +95,7 @@ def select_individuals(population, scores, num_parents):
         population[i] for i in sorted_indices[:num_parents]
     ]
 
-    return crossover(selected_individuals, num_parents)
+    return crossover(selected_individuals, num_parents, xover_prob)
 
 
 def estimate_distribution(selected_individuals, num_features):
@@ -100,7 +105,8 @@ def estimate_distribution(selected_individuals, num_features):
     return distribution / len(selected_individuals)
 
 
-def generate_offspring(parents, num_offspring, distribution, inf_lim, sup_lim):
+def generate_offspring(parents, num_offspring, distribution, inf_lim, sup_lim,
+                       mut_prob):
     offspring = []
     for _ in range(num_offspring):
         individual = [int(inf_lim < prob < sup_lim) for prob in distribution]
@@ -108,12 +114,12 @@ def generate_offspring(parents, num_offspring, distribution, inf_lim, sup_lim):
         if sum(individual) == 0:
             individual = generate_individual(len(individual))
         offspring.append(individual)
-    return mutation(offspring)
+    return mutation(offspring, mut_prob)
 
 
 def genetic_algorithm(X_train, X_test, y_train, y_test, population_size,
                       num_generations, num_parents, num_offspring, inf_lim,
-                      sup_lim):
+                      sup_lim, mut_prob, xover_prob):
     num_features = X_train[0].shape[0]
     population = generate_population(population_size, num_features)
 
@@ -125,11 +131,12 @@ def genetic_algorithm(X_train, X_test, y_train, y_test, population_size,
                                      y_test)
 
         # Select parents
-        parents = select_individuals(population, scores, num_parents)
+        parents = select_individuals(population, scores, num_parents,
+                                     xover_prob)
 
         distribution = estimate_distribution(parents, num_features)
         offspring = generate_offspring(parents, num_offspring, distribution,
-                                       inf_lim, sup_lim)
+                                       inf_lim, sup_lim, mut_prob)
 
         # Replace the population with offspring
         population = parents + offspring
@@ -176,10 +183,12 @@ num_parents = 10
 num_offspring = 20
 inf_lim = 0.25
 sup_lim = 0.90
+mut_prob = 0.3
+xover_prob = 0.5
 
 results = genetic_algorithm(X_train, X_val, y_train, y_val, population_size,
                             num_generations, num_parents, num_offspring,
-                            inf_lim, sup_lim)
+                            inf_lim, sup_lim, mut_prob, xover_prob)
 
 results['Test accuracy'] = results['Individual'].apply(
     lambda ind: calculate_fitness(ind, X_train, X_test, y_train, y_test))
