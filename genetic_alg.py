@@ -45,7 +45,11 @@ def calculate_fitness(individual, X_train, X_test, y_train, y_test):
         segment[selected_bands, :, :].reshape(-1) for segment in X_test
     ]
 
-    clf = SVC(C=100, gamma='scale', kernel='rbf', class_weight='balanced')
+    clf = SVC(C=100,
+              gamma='scale',
+              kernel='rbf',
+              class_weight='balanced',
+              random_state=seed)
     clf.fit(X_train_sel, y_train)
     y_pred = clf.predict(X_test_sel)
     return balanced_accuracy_score(y_test, y_pred)
@@ -194,11 +198,11 @@ def genetic_algorithm(X_train, X_test, y_train, y_test, population_size,
 # Loading dataset
 X_all = []
 y_all = []
-for path in glob.glob(f'data/dataset_v3-{comp}/forest/*'):
+for path in glob.glob(f'data/dataset_v4-467/forest/*'):
     X_all.append(np.load(path))
     y_all.append(0)
 
-for path in glob.glob(f'data/dataset_v3-{comp}/non_forest/*'):
+for path in glob.glob(f'data/dataset_v4-467/non_forest/*'):
     X_all.append(np.load(path))
     y_all.append(1)
 
@@ -214,12 +218,12 @@ X_val, X_test, y_val, y_test = train_test_split(X_val,
 
 # call the genetic algorithm
 num_best = 10
-population_size = 20
-num_generations = 50
-num_parents = 10
-num_offspring = 20
-inf_lim = 0.05
-sup_lim = 0.95
+population_size = 10
+num_generations = 10
+num_parents = 5
+num_offspring = 5
+inf_lim = 0.00
+sup_lim = 1.00
 mut_prob = 0
 xover_prob = 0
 

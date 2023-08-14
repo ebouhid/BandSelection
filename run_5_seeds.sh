@@ -1,5 +1,5 @@
-export EXP_NAME=NewOffspring
-export EXP_COMP=pca
+export EXP_NAME=NewDataset_v4-467
+export EXP_COMP='467'
 
 mkdir results/$EXP_NAME
 nohup python genetic_alg.py $EXP_NAME 1 $EXP_COMP > results/$EXP_NAME/genetic_$EXP_COMP-1.out 2>&1 &

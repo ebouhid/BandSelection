@@ -32,7 +32,11 @@ def evaluate_combination(combination, X_train, X_test, y_train, y_test):
         segment[selected_bands, :, :].reshape(-1) for segment in X_test
     ]
 
-    clf = SVC(C=100, gamma='scale', kernel='rbf', class_weight='balanced')
+    clf = SVC(C=100,
+              gamma='scale',
+              kernel='rbf',
+              class_weight='balanced',
+              random_state=seed)
     clf.fit(X_train_sel, y_train)
     y_pred = clf.predict(X_test_sel)
     return balanced_accuracy_score(y_test, y_pred)
@@ -42,11 +46,11 @@ if __name__ == "__main__":
     # Loading dataset
     X_all = []
     y_all = []
-    for path in glob.glob(f'data/dataset_v3-{comp}/forest/*'):
+    for path in glob.glob(f'data/dataset_v4-467/forest/*'):
         X_all.append(np.load(path))
         y_all.append(0)
 
-    for path in glob.glob(f'data/dataset_v3-{comp}/non_forest/*'):
+    for path in glob.glob(f'data/dataset_v4-467/non_forest/*'):
         X_all.append(np.load(path))
         y_all.append(1)
 
@@ -82,4 +86,4 @@ if __name__ == "__main__":
         by='Balanced Accuracy', ascending=False)
 
     print(results_df)
-    results_df.to_csv('results_bruteforce.csv', index=False)
+    # results_df.to_csv(f'results_bruteforce-{seed}.csv', index=False)
