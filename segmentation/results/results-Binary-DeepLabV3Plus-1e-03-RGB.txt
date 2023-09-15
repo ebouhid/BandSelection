@@ -1,0 +1,10 @@
+TEST RESULTS
+DeepLabV3Plus-RGB
+Precision: 0.8666
+F1 Score: 0.8666
+IoU: 0.7655
+Accuracy: 0.8666
+Recall: 0.8666
+On epoch: 1
+Time: 5m 16s
+Memória (MiB): 3264.0

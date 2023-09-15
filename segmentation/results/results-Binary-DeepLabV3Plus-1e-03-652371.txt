@@ -1,0 +1,10 @@
+TEST RESULTS
+DeepLabV3Plus-652371
+Precision: 0.8880
+F1 Score: 0.8880
+IoU: 0.7993
+Accuracy: 0.8880
+Recall: 0.8880
+On epoch: 1
+Time: 5m 40s
+Memória (MiB): 3264.0

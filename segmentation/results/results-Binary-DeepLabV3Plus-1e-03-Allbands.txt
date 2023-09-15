@@ -1,0 +1,10 @@
+TEST RESULTS
+DeepLabV3Plus-Allbands
+Precision: 0.8796
+F1 Score: 0.8796
+IoU: 0.7859
+Accuracy: 0.8796
+Recall: 0.8796
+On epoch: 0
+Time: 6m 15s
+Memória (MiB): 3264.0
