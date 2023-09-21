@@ -137,9 +137,8 @@ def generate_offspring(parents, num_offspring, distribution, inf_lim, sup_lim,
     return mutation(spawn_individuals, mut_prob)
 
 
-def genetic_algorithm(X_train, X_test, y_train, y_test, population_size,
-                      num_generations, num_parents, num_offspring, inf_lim,
-                      sup_lim, mut_prob, xover_prob):
+def UMDA(X_train, X_test, y_train, y_test, population_size, num_generations,
+         num_parents, num_offspring, inf_lim, sup_lim, mut_prob, xover_prob):
     num_features = X_train[0].shape[0]
     population = generate_population(population_size, num_features)
 
@@ -227,9 +226,9 @@ sup_lim = 1.00
 mut_prob = 0
 xover_prob = 0
 
-results = genetic_algorithm(X_train, X_val, y_train, y_val, population_size,
-                            num_generations, num_parents, num_offspring,
-                            inf_lim, sup_lim, mut_prob, xover_prob)
+results = UMDA(X_train, X_val, y_train, y_val, population_size,
+               num_generations, num_parents, num_offspring, inf_lim, sup_lim,
+               mut_prob, xover_prob)
 
 results['Test accuracy'] = results['Individual'].apply(
     lambda ind: calculate_fitness(ind, X_train, X_test, y_train, y_test))
