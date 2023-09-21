@@ -10,7 +10,6 @@ import sys
 # Get command line arguments
 exp_name = str(sys.argv[1])
 seed = int(sys.argv[2])
-comp = str(sys.argv[3])
 
 # Set random seed
 np.random.seed(seed)
