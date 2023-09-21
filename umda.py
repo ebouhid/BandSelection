@@ -233,3 +233,7 @@ results['Test accuracy'] = results['Individual'].apply(
     lambda ind: calculate_fitness(ind, X_train, X_test, y_train, y_test))
 
 print(results.sort_values(by='Test accuracy', ascending=False).head(num_best))
+
+# Save results
+top_n = results.sort_values(by='Test accuracy', ascending=False).head(num_best)
+top_n.to_csv(f'results/{exp_name}/top-{num_best}-{seed}.csv', index=False)
