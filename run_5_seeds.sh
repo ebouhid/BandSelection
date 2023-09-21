@@ -1,4 +1,4 @@
-export EXP_NAME='pca'
+export EXP_NAME=$1
 
 mkdir results/$EXP_NAME
 nohup python umda.py $EXP_NAME 1 > results/$EXP_NAME/genetic-1.out 2>&1 &
