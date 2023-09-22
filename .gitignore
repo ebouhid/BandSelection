@@ -6,3 +6,7 @@ article_imgs
 gridsearch_test.ipynb
 slic_performance_analysis.ipynb
 results/
+segmentation/models/
+segmentation/mlruns/
+segmentation/results/
+segmentation/runs/
