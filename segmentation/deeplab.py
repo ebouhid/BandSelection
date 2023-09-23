@@ -10,11 +10,11 @@ import numpy as np
 import os
 
 BATCH_SIZE = 32
-NUM_EPOCHS = 30
+NUM_EPOCHS = 100
 NUM_FOLDS = 5
 PATCH_SIZE = 256
-STRIDE_SIZE = 256
-INFO = 'TestRun'
+STRIDE_SIZE = 64
+INFO = 'Local_FromScratch'
 NUM_CLASSES = 1
 
 os.environ['MLFLOW_EXPERIMENT_NAME'] = INFO
@@ -24,10 +24,9 @@ compositions = {
     "RGB": [4, 3, 2],
     "6": [6],
     "65": [6, 5],
-    "652": [6, 5, 2],
-    "6523": [6, 5, 2, 3],
-    "65237": [6, 5, 2, 3, 7],
-    "652371": [6, 5, 2, 3, 7, 1]
+    "651": [6, 5, 1],
+    "6514": [6, 5, 1, 4],
+    "6517": [6, 5, 1, 7],
 }
 
 train_regions = [1, 2, 5, 6, 7, 8, 9, 10]  # Do not use region 5 anywhere
