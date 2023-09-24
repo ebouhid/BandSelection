@@ -7,9 +7,9 @@ import time
 import os
 import models
 import pytorch_lightning as pl
+
 # Set experiment name
 INFO = 'Local_FromScratch'
-os.environ['MLFLOW_EXPERIMENT_NAME'] = INFO
 
 # Set hyperparameters
 BATCH_SIZE = 32
@@ -39,17 +39,6 @@ for COMPOSITION in compositions:
     model = models.DeepLabV3Plus_PL(in_channels=len(compositions[COMPOSITION]),
                                     num_classes=NUM_CLASSES)
     with mlflow.start_run():
-        # Log model hyperparameters
-        mlflow.log_param("model", model.__class__.__name__)
-        mlflow.log_param("composition", COMPOSITION)
-        mlflow.log_param("batch_size", BATCH_SIZE)
-        mlflow.log_param("num_epochs", NUM_EPOCHS)
-        mlflow.log_param("patch_size", PATCH_SIZE)
-        mlflow.log_param("stride_size", STRIDE_SIZE)
-        mlflow.log_param("num_classes", NUM_CLASSES)
-        mlflow.log_param("train_regions", train_regions)
-        mlflow.log_param("test_regions", test_regions)
-
         # Instantiating datasets
         train_ds = XinguDataset(DATASET_DIR,
                                 TRUTH_DIR,
@@ -76,8 +65,22 @@ for COMPOSITION in compositions:
                                                   shuffle=False,
                                                   num_workers=8)
 
+        # Instantiating logger
+        logger = pl.loggers.MLFlowLogger(experiment_name=INFO)
+
+        # Log model hyperparameters
+        logger.log_hyperparams({"model": model.__class__.__name__})
+        logger.log_hyperparams({"composition": COMPOSITION})
+        logger.log_hyperparams({"batch_size": BATCH_SIZE})
+        logger.log_hyperparams({"num_epochs": NUM_EPOCHS})
+        logger.log_hyperparams({"patch_size": PATCH_SIZE})
+        logger.log_hyperparams({"stride_size": STRIDE_SIZE})
+        logger.log_hyperparams({"num_classes": NUM_CLASSES})
+        logger.log_hyperparams({"train_regions": train_regions})
+        logger.log_hyperparams({"test_regions": test_regions})
+
         # Instantiating trainer
-        trainer = pl.Trainer(max_epochs=NUM_EPOCHS)
+        trainer = pl.Trainer(max_epochs=NUM_EPOCHS, logger=logger)
 
         # Training
         trainer.fit(model, train_loader, test_loader)
