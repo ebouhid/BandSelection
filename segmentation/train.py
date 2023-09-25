@@ -11,6 +11,9 @@ import pytorch_lightning as pl
 # Set experiment name
 INFO = 'Local_FromScratch'
 
+# Set model name
+MODEL_NAME = 'DeepLabV3Plus'
+
 # Set hyperparameters
 BATCH_SIZE = 64
 NUM_EPOCHS = 100
@@ -37,10 +40,12 @@ test_regions = [3, 4]
 
 for COMPOSITION in compositions:
     with mlflow.start_run() as run:
-        model = models.DeepLabV3Plus_PL(in_channels=len(
-            compositions[COMPOSITION]),
-                                        num_classes=NUM_CLASSES,
-                                        run_name=run.info.run_name)
+        model = models.SegmentationModelsPytorch_PL(
+            model_name=MODEL_NAME,
+            in_channels=len(compositions[COMPOSITION]),
+            num_classes=NUM_CLASSES,
+            run_name=run.info.run_name)
+
         # Instantiating datasets
         train_ds = XinguDataset(DATASET_DIR,
                                 TRUTH_DIR,
