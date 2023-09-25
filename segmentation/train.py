@@ -7,18 +7,19 @@ import time
 import os
 import models
 import pytorch_lightning as pl
+import sys
 
 # Set experiment name
 INFO = 'Local_FromScratch'
 
-# Set model name
-MODEL_NAME = 'DeepLabV3Plus'
+# Get model name as command line argument
+MODEL_NAME = str(sys.argv[1])
 
 # Set hyperparameters
 BATCH_SIZE = 64
 NUM_EPOCHS = 100
-PATCH_SIZE = 64
-STRIDE_SIZE = 256
+PATCH_SIZE = 256
+STRIDE_SIZE = 64
 NUM_CLASSES = 1
 DATASET_DIR = './dataset/scenes_allbands_ndvi'
 TRUTH_DIR = './dataset/truth_masks'
