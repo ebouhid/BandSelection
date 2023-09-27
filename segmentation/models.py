@@ -4,8 +4,6 @@ from segmentation_models_pytorch.utils.losses import BCELoss
 import torch
 import torchmetrics
 import numpy as np
-from pytorch_lightning.callbacks import ModelCheckpoint
-from mlflowmodelcheckpoint import MLflowModelCheckpoint
 import hashlib
 
 
@@ -16,8 +14,7 @@ class SegmentationModelsPytorch_PL(pl.LightningModule):
                  num_classes,
                  activation='sigmoid',
                  encoder_name='resnet34',
-                 encoder_weights=None,
-                 run_name=None):
+                 encoder_weights=None):
         super().__init__()
 
         # Defining model
@@ -31,7 +28,6 @@ class SegmentationModelsPytorch_PL(pl.LightningModule):
 
         self.loss = BCELoss()
         self.lr = 1e-3
-        self.run_name = run_name
 
         # Defining metrics
         self.train_accuracy = torchmetrics.Accuracy(task='binary')
@@ -56,19 +52,6 @@ class SegmentationModelsPytorch_PL(pl.LightningModule):
                                                     gamma=0.9)
 
         return {"optimizer": optimizer, "lr_scheduler": scheduler}
-
-    def configure_callbacks(self):
-        # Define the custom MLflowModelCheckpoint callback
-        mlflow_checkpoint_callback = MLflowModelCheckpoint(
-            monitor='val_iou',
-            mode='max',
-            dirpath='./saved_models/',
-            filename=f'best_model_{self.run_name}',
-            save_top_k=1,
-            verbose=True,
-        )
-
-        return [mlflow_checkpoint_callback]
 
     def training_step(self, batch, batch_idx):
         inputs, targets = batch
