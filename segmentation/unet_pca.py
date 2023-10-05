@@ -26,7 +26,7 @@ for COMPOSITION in compositions:
     CHANNELS = len(compositions[COMPOSITION])
     # (model, loss, lr)
     configs = [
-        (smp.DeepLabV3Plus(
+        (smp.Unet(
             in_channels=CHANNELS,
             classes=NUM_CLASSES,
             activation='sigmoid',

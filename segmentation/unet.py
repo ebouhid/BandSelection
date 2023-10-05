@@ -2,7 +2,7 @@ import torch
 import segmentation_models_pytorch as smp
 import segmentation_models_pytorch.utils as smpu
 import mlflow
-from dataset.dataset_pca import XinguDataset
+from dataset.dataset import XinguDataset
 from datetime import datetime
 import glob
 import time
@@ -18,7 +18,15 @@ NUM_CLASSES = 1
 
 os.environ['MLFLOW_EXPERIMENT_NAME'] = INFO
 
-compositions = {"PCA": range(1, 4)}
+compositions = {
+    "All+NDVI": range(1, 8),
+    "RGB": [4, 3, 2],
+    "6": [6],
+    "65": [6, 5],
+    "651": [6, 5, 2],
+    "6514": [6, 5, 2, 3],
+    "6517": [6, 5, 2, 3, 7, 1]
+}
 
 train_regions = [1, 2, 6, 7, 8, 9, 10]  # Do not use region 5 anywhere
 test_regions = [3, 4]
@@ -26,7 +34,7 @@ for COMPOSITION in compositions:
     CHANNELS = len(compositions[COMPOSITION])
     # (model, loss, lr)
     configs = [
-        (smp.DeepLabV3Plus(
+        (smp.Unet(
             in_channels=CHANNELS,
             classes=NUM_CLASSES,
             activation='sigmoid',
@@ -46,14 +54,14 @@ for COMPOSITION in compositions:
 
             print(f"{10 * '#'} {model.__class__.__name__} {10*'#'}")
             # instantiating datasets
-            train_ds = XinguDataset('./dataset/scenes_pca',
+            train_ds = XinguDataset('./dataset/scenes_allbands_ndvi',
                                     './dataset/truth_masks',
                                     compositions[COMPOSITION],
                                     train_regions,
                                     PATCH_SIZE,
                                     STRIDE_SIZE,
                                     transforms=True)
-            test_ds = XinguDataset('./dataset/scenes_pca',
+            test_ds = XinguDataset('./dataset/scenes_allbands_ndvi',
                                    './dataset/truth_masks',
                                    compositions[COMPOSITION],
                                    test_regions,

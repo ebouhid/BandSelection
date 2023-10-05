@@ -1,0 +1,8 @@
+Command: python deeplab.py
+PID: 12942
+Command: python deeplab_pca.py
+PID: 13552
+Command: python unet.py
+PID: 2582
+Command: python unet_pca.py
+PID: 8339

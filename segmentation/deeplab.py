@@ -9,28 +9,26 @@ import time
 import numpy as np
 import os
 
-BATCH_SIZE = 32
-NUM_EPOCHS = 30
-NUM_FOLDS = 5
+BATCH_SIZE = 64
+NUM_EPOCHS = 100
 PATCH_SIZE = 256
-STRIDE_SIZE = 256
-INFO = 'TestRun'
+STRIDE_SIZE = 64
+INFO = 'Local_GRSL'
 NUM_CLASSES = 1
 
 os.environ['MLFLOW_EXPERIMENT_NAME'] = INFO
 
 compositions = {
-    "Allbands": range(1, 8),
+    "All+NDVI": range(1, 8),
     "RGB": [4, 3, 2],
     "6": [6],
     "65": [6, 5],
-    "652": [6, 5, 2],
-    "6523": [6, 5, 2, 3],
-    "65237": [6, 5, 2, 3, 7],
-    "652371": [6, 5, 2, 3, 7, 1]
+    "651": [6, 5, 2],
+    "6514": [6, 5, 2, 3],
+    "6517": [6, 5, 2, 3, 7, 1]
 }
 
-train_regions = [1, 2, 5, 6, 7, 8, 9, 10]  # Do not use region 5 anywhere
+train_regions = [1, 2, 6, 7, 8, 9, 10]  # Do not use region 5 anywhere
 test_regions = [3, 4]
 for COMPOSITION in compositions:
     CHANNELS = len(compositions[COMPOSITION])
@@ -42,7 +40,7 @@ for COMPOSITION in compositions:
             activation='sigmoid',
             encoder_name='resnet34',
             encoder_weights=None,
-        ), smp.utils.losses.JaccardLoss(), 1e-3),
+        ), smp.utils.losses.JaccardLoss(), 5e-4),
     ]
 
     for (model, loss, lr) in configs:
@@ -103,16 +101,16 @@ for COMPOSITION in compositions:
             train_dataloader = torch.utils.data.DataLoader(
                 dataset=train_ds,
                 batch_size=BATCH_SIZE,
-                drop_last=True,
+                drop_last=False,
                 shuffle=True,
-            )
+                num_workers=8)
 
             test_dataloader = torch.utils.data.DataLoader(
                 dataset=test_ds,
                 batch_size=BATCH_SIZE,
-                drop_last=True,
+                drop_last=False,
                 shuffle=False,
-            )
+                num_workers=8)
 
             # logging parameters
             mlflow.log_params({
