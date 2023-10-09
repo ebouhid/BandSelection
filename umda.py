@@ -241,9 +241,9 @@ X_val, X_test, y_val, y_test = train_test_split(X_val,
                                                 random_state=seed + 1)
 
 # call the genetic algorithm
-num_best = 10
-population_size = 10
-num_generations = 10
+num_best = 5
+population_size = 15
+num_generations = 15
 num_parents = 5
 num_offspring = 5
 inf_lim = 0.10
