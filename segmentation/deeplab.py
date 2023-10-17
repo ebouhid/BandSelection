@@ -19,13 +19,13 @@ NUM_CLASSES = 1
 os.environ['MLFLOW_EXPERIMENT_NAME'] = INFO
 
 compositions = {
-    "All+NDVI": range(1, 8),
-    "RGB": [4, 3, 2],
     "6": [6],
     "65": [6, 5],
     "651": [6, 5, 1],
+    "RGB": [4, 3, 2],
     "6514": [6, 5, 1, 4],
     "6517": [6, 5, 1, 7],
+    "All+NDVI": range(1, 8),
 }
 
 train_regions = [1, 2, 6, 7, 8, 9, 10]  # Do not use region 5 anywhere
