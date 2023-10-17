@@ -64,6 +64,7 @@ def calculate_fitness(individual, X_train, X_test, y_train, y_test):
         cv=5,
         scoring='balanced_accuracy',
         random_state=seed,
+        n_jobs=5,
         verbose=4)
     random_search.fit(X_train_sel, y_train)
 
@@ -220,25 +221,31 @@ def UMDA(X_train, X_test, y_train, y_test, population_size, num_generations,
 
 
 # Loading dataset
-X_all = []
-y_all = []
-for path in glob.glob(f'data/forest/*'):
-    X_all.append(np.load(path))
-    y_all.append(0)
+X_train = []
+y_train = []
+X_test = []
+y_test = []
+for path in glob.glob(f'data/train/forest/*'):
+    X_train.append(np.load(path))
+    y_train.append(0)
 
-for path in glob.glob(f'data/non_forest/*'):
-    X_all.append(np.load(path))
-    y_all.append(1)
+for path in glob.glob(f'data/train/non_forest/*'):
+    X_train.append(np.load(path))
+    y_train.append(1)
 
-# perform split
-X_train, X_val, y_train, y_val = train_test_split(X_all,
-                                                  y_all,
-                                                  test_size=0.3,
-                                                  random_state=seed)
-X_val, X_test, y_val, y_test = train_test_split(X_val,
-                                                y_val,
+for path in glob.glob(f'data/test/forest/*'):
+    X_test.append(np.load(path))
+    y_test.append(0)
+
+for path in glob.glob(f'data/test/non_forest/*'):
+    X_test.append(np.load(path))
+    y_test.append(1)
+
+# perform test / validation split
+X_val, X_test, y_val, y_test = train_test_split(X_test,
+                                                y_test,
                                                 test_size=0.5,
-                                                random_state=seed + 1)
+                                                random_state=seed)
 
 # call the genetic algorithm
 num_best = 5
