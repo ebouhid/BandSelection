@@ -8,6 +8,8 @@ import glob
 import time
 import numpy as np
 import os
+import threading
+from gpuprofiling import track_gpu
 
 BATCH_SIZE = 64
 NUM_EPOCHS = 100
@@ -15,6 +17,7 @@ PATCH_SIZE = 256
 STRIDE_SIZE = 64
 INFO = 'Local_GRSL'
 NUM_CLASSES = 1
+TRACKING_INTERVAL = 0.1
 
 os.environ['MLFLOW_EXPERIMENT_NAME'] = INFO
 
@@ -23,6 +26,14 @@ compositions = {"PCA": range(1, 4)}
 train_regions = [1, 2, 6, 7, 8, 9, 10]  # Do not use region 5 anywhere
 test_regions = [3, 4]
 for COMPOSITION in compositions:
+    TRACKING_FNAME = f'./results/{INFO}-{COMPOSITION}-power.csv'
+    # Start GPU power draw tracking
+    stop_event = threading.Event()
+    tracking_thread = threading.Thread(target=track_gpu,
+                                       args=(TRACKING_INTERVAL, TRACKING_FNAME,
+                                             stop_event))
+    tracking_thread.start()
+
     CHANNELS = len(compositions[COMPOSITION])
     # (model, loss, lr)
     configs = [
@@ -166,6 +177,8 @@ for COMPOSITION in compositions:
 
             end = time.time()
             execution_time = end - start
+            stop_event.set()
+            tracking_thread.join()
 
             # Convert execution time to minutes and seconds
             minutes = int(execution_time // 60)
@@ -184,4 +197,3 @@ for COMPOSITION in compositions:
                 f.write(f'Recall: {max_recall :.4f}\n')
                 f.write(f'On epoch: {best_epoch}\n')
                 f.write(f'Time: {minutes}m {seconds}s\n')
-                f.write(f'Memória (MiB): {max_memory_usage}\n')

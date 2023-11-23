@@ -6,7 +6,7 @@ rm pids.txt
 
 # Source conda and activate environment
 source ~/miniconda3/etc/profile.d/conda.sh
-conda activate smp
+conda activate pl
 
 # Function to run a command and save PID and command to pids.txt
 run_command_with_pid() {
