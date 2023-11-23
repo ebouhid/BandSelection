@@ -11,3 +11,5 @@ segmentation/mlruns/
 segmentation/results/
 segmentation/runs/
 segmentation/lightning_logs/
+__pycache__/
+pids.txt
