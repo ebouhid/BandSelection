@@ -10,7 +10,6 @@ import sys
 # Get command line arguments
 exp_name = str(sys.argv[1])
 seed = int(sys.argv[2])
-comp = str(sys.argv[3])
 
 # Set random seed
 np.random.seed(seed)
@@ -46,11 +45,11 @@ if __name__ == "__main__":
     # Loading dataset
     X_all = []
     y_all = []
-    for path in glob.glob(f'data/dataset_v4-467/forest/*'):
+    for path in glob.glob(f'data/forest/*'):
         X_all.append(np.load(path))
         y_all.append(0)
 
-    for path in glob.glob(f'data/dataset_v4-467/non_forest/*'):
+    for path in glob.glob(f'data/non_forest/*'):
         X_all.append(np.load(path))
         y_all.append(1)
 

@@ -9,13 +9,11 @@ class XinguDataset(Dataset):
     def __init__(self,
                  scenes_dir,
                  masks_dir,
-                 encoder,
                  composition,
                  regions,
                  patch_size,
                  stride_size,
                  transforms=None):
-        self.encoder = encoder
         self.composition = composition
         self.patch_size = patch_size
         self.stride_size = stride_size
@@ -24,8 +22,6 @@ class XinguDataset(Dataset):
         self.msk_path = masks_dir
 
         self.image_paths = sorted(os.listdir(self.img_path))
-        # print(f'total paths: {len(self.image_paths)}')
-        # print(f'paths: {self.image_paths}')
         self.mask_paths = sorted(os.listdir(self.msk_path))
 
         self.images = []
@@ -111,24 +107,20 @@ class XinguDataset(Dataset):
     def __getitem__(self, idx):
         # get selected patches
         image = self.img_patches[idx]
-        # print(f'image shape: {image.shape}')
         mask = self.msk_patches[idx]
 
         # create composition
         nbands = len(self.composition)
         combination = np.zeros((nbands, ) + image.shape[1:])
-        # print(f'combination shape: {combination.shape}')
 
         for i in range(nbands):
             combination[i, :, :] = image[(self.composition[i] - 1), :, :]
 
         combination = np.float32(combination) / 255
 
-        # encoded_mask = self.encoder.perform(mask)
         mask = np.expand_dims(mask, axis=0)
         mask = np.float32(mask)
 
         combination = combination.astype(np.float32)
-        combination = combination - combination.min() / (combination.max() -
-                                                         combination.min())
+
         return combination, mask

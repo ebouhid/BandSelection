@@ -5,3 +5,11 @@ balanced.ipynb
 article_imgs
 gridsearch_test.ipynb
 slic_performance_analysis.ipynb
+results/
+segmentation/models/
+segmentation/mlruns/
+segmentation/results/
+segmentation/runs/
+segmentation/lightning_logs/
+__pycache__/
+pids.txt
