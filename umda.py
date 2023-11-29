@@ -1,7 +1,6 @@
 import random
 from sklearn.svm import SVC
 from sklearn.metrics import balanced_accuracy_score
-from sklearn.model_selection import train_test_split
 import glob
 import numpy as np
 import pandas as pd
@@ -12,7 +11,6 @@ import logging
 # Get command line arguments
 exp_name = str(sys.argv[1])
 seed = int(sys.argv[2])
-comp = str(sys.argv[3])
 
 # Set random seed
 np.random.seed(seed)
@@ -34,13 +32,13 @@ def calculate_fitness(individual, X_train, X_test, y_train, y_test):
     Calculate the fitness of an individual by training an SVM classifier and
     evaluating its performance using accuracy.
     """
-    # print(f'individual: {individual}')
+    print(f'individual: {individual}')
     selected_bands = list(np.nonzero(individual)[0])
 
     X_train_sel = [
         segment[selected_bands, :, :].reshape(-1) for segment in X_train
     ]
-    # print(f'X_train_sel[0].shape: {X_train_sel[0].shape}')
+    print(f'X_train_sel[0].shape: {X_train_sel[0].shape}')
     X_test_sel = [
         segment[selected_bands, :, :].reshape(-1) for segment in X_test
     ]
@@ -133,8 +131,12 @@ def generate_offspring(parents, num_offspring, distribution, inf_lim, sup_lim,
         if sum(individual) == 0:
             individual = generate_individual(len(individual))
         offspring.append(individual)
-    spawn_individuals = crossover(offspring, num_offspring, xover_prob)
-    return mutation(spawn_individuals, mut_prob)
+    if xover_prob > 0:
+        offspring = crossover(offspring, num_offspring, xover_prob)
+    
+    if mut_prob > 0:
+        offspring = mutation(offspring, mut_prob)
+    return offspring
 
 
 def genetic_algorithm(X_train, X_test, y_train, y_test, population_size,
@@ -194,44 +196,54 @@ def genetic_algorithm(X_train, X_test, y_train, y_test, population_size,
 
     return final_best_individuals
 
+if __name__ == '__main__':
+    # Loading dataset
+    # Training set
+    X_train = []
+    y_train = []
+    for filename in glob.glob('data/classification_dataset/train/forest/*'):
+        X_train.append(np.load(filename))
+        y_train.append(0)
+    for filename in glob.glob('data/classification_dataset/train/non_forest/*'):
+        X_train.append(np.load(filename))
+        y_train.append(1)
 
-# Loading dataset
-X_all = []
-y_all = []
-for path in glob.glob(f'data/dataset_v4-467/forest/*'):
-    X_all.append(np.load(path))
-    y_all.append(0)
+    # Validation set
+    X_val = []
+    y_val = []
+    for filename in glob.glob('data/classification_dataset/val/forest/*'):
+        X_val.append(np.load(filename))
+        y_val.append(0)
+    for filename in glob.glob('data/classification_dataset/val/non_forest/*'):
+        X_val.append(np.load(filename))
+        y_val.append(1)
+    
+    # Test set
+    X_test = []
+    y_test = []
+    for filename in glob.glob('data/classification_dataset/test/forest/*'):
+        X_test.append(np.load(filename))
+        y_test.append(0)
+    for filename in glob.glob('data/classification_dataset/test/non_forest/*'):
+        X_test.append(np.load(filename))
+        y_test.append(1)
 
-for path in glob.glob(f'data/dataset_v4-467/non_forest/*'):
-    X_all.append(np.load(path))
-    y_all.append(1)
+    # call the genetic algorithm
+    num_best = 10
+    population_size = 200
+    num_generations = 30
+    num_parents = 50
+    num_offspring = 150
+    inf_lim = 0.00
+    sup_lim = 1.00
+    mut_prob = 0
+    xover_prob = 0
 
-# perform split
-X_train, X_val, y_train, y_val = train_test_split(X_all,
-                                                  y_all,
-                                                  test_size=0.3,
-                                                  random_state=seed)
-X_val, X_test, y_val, y_test = train_test_split(X_val,
-                                                y_val,
-                                                test_size=0.5,
-                                                random_state=seed + 1)
+    results = genetic_algorithm(X_train, X_val, y_train, y_val, population_size,
+                                num_generations, num_parents, num_offspring,
+                                inf_lim, sup_lim, mut_prob, xover_prob)
 
-# call the genetic algorithm
-num_best = 10
-population_size = 10
-num_generations = 10
-num_parents = 5
-num_offspring = 5
-inf_lim = 0.00
-sup_lim = 1.00
-mut_prob = 0
-xover_prob = 0
+    results['Test accuracy'] = results['Individual'].apply(
+        lambda ind: calculate_fitness(ind, X_train, X_test, y_train, y_test))
 
-results = genetic_algorithm(X_train, X_val, y_train, y_val, population_size,
-                            num_generations, num_parents, num_offspring,
-                            inf_lim, sup_lim, mut_prob, xover_prob)
-
-results['Test accuracy'] = results['Individual'].apply(
-    lambda ind: calculate_fitness(ind, X_train, X_test, y_train, y_test))
-
-print(results.sort_values(by='Test accuracy', ascending=False).head(num_best))
+    print(results.sort_values(by='Test accuracy', ascending=False).head(num_best))
