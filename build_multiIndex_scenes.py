@@ -93,6 +93,6 @@ if __name__ == "__main__":
         nans = np.count_nonzero(np.isnan(scene_multiIndex))
         assert nans == 0, f'Found {nans} NaN values in {region} scene indexes'
         
-        np.save(f'scenes_multiIndex/{region}.npy', scene)
+        np.save(f'scenes_multiIndex/{region}.npy', scene_multiIndex)
         print(f'Saved {region} scene successfully with shape {scene_multiIndex.shape}')
         
