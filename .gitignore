@@ -14,3 +14,4 @@ segmentation/lightning_logs/
 __pycache__/
 pids.txt
 scenes_multiIndex
+.ipynb_checkpoints/
