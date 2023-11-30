@@ -13,3 +13,4 @@ segmentation/runs/
 segmentation/lightning_logs/
 __pycache__/
 pids.txt
+scenes_multiIndex
