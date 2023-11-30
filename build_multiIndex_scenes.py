@@ -3,6 +3,7 @@ import spyndex
 from glob import glob
 from tqdm import tqdm
 import warnings
+import os
 
 def get_region(path):
     return f"{path.split('/')[-1].split('.')[0].split('_')[-1]}"
@@ -14,6 +15,16 @@ def sublist(a, b):
 if __name__ == "__main__":
     allbands_paths = sorted(glob('scenes_allbands/*'))
     print(f'Found {len(allbands_paths)} scenes')
+    
+    # Check for save path
+    if not os.path.exists('scenes_multiIndex'):
+        os.makedirs('scenes_multiIndex')
+        print('Created scenes_multiIndex directory.')
+    elif len(os.listdir('scenes_multiIndex')) != 0:
+            # Remove previous files
+            print('Removing previous files...')
+            for file in os.listdir('scenes_multiIndex'):
+                os.remove(f'scenes_multiIndex/{file}')
 
     # Load 7-band scenes
     scenes = [(np.load(path), path) for path in allbands_paths]
@@ -39,7 +50,7 @@ if __name__ == "__main__":
     print(f'Found {len(valid_indices)} valid indices for {platform}. List available at valid_indices_{platform}.txt')
 
     # Compute spectral indexes
-    for scene, path in scenes:
+    for scene, path in tqdm(scenes, desc='Computing spectral indexes'):
         scene = scene.transpose(2, 0, 1) / 255.
         scene = np.array(np.where(scene == 0., 1e-6, scene), dtype=np.float64)
         region = get_region(path)
@@ -76,17 +87,6 @@ if __name__ == "__main__":
 
         warnings.filterwarnings("error", category=RuntimeWarning) # uncomment to treat RuntimeWarnings as errors
 
-
-        # for index in tqdm(valid_indices, desc=f'Computing spectral indexes for {region}'):
-        #     try:
-        #         channel = spyndex.computeIndex(index, params=params)
-        #         channel = np.expand_dims(channel, axis=0)
-        #         scene = np.concatenate([scene, channel], axis=0)
-        #     except RuntimeWarning as e:
-        #         # Catch the warning and print the index variable
-        #         print(f"Warning: {e}, Index: {index}")
-
-
         spectral_indexes = spyndex.computeIndex(valid_indices, params=params)
         scene_multiIndex = np.concatenate([scene, spectral_indexes], axis=0)
 
@@ -94,5 +94,4 @@ if __name__ == "__main__":
         assert nans == 0, f'Found {nans} NaN values in {region} scene indexes'
         
         np.save(f'scenes_multiIndex/{region}.npy', scene_multiIndex)
-        print(f'Saved {region} scene successfully with shape {scene_multiIndex.shape}')
         
