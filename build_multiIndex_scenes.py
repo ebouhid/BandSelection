@@ -93,5 +93,11 @@ if __name__ == "__main__":
         nans = np.count_nonzero(np.isnan(scene_multiIndex))
         assert nans == 0, f'Found {nans} NaN values in {region} scene indexes'
         
-        np.save(f'scenes_multiIndex/{region}.npy', scene_multiIndex)
+        # Normalize every channel to [0, 255]
+        for channel in range(scene_multiIndex.shape[0]):
+            scene_multiIndex[channel, :, :] = (scene_multiIndex[channel, :, :] - np.min(scene_multiIndex[channel, :, :])) \
+                / (np.max(scene_multiIndex[channel, :, :]) - np.min(scene_multiIndex[channel, :, :]))
+            scene_multiIndex[channel, :, :] = scene_multiIndex[channel, :, :] * 255.
+
+        np.save(f'scenes_multiIndex/{region}.npy', scene_multiIndex.astype(np.uint8))
         
