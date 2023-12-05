@@ -1,5 +1,6 @@
 import random
-from sklearn.svm import SVC
+# from sklearn.svm import SVC
+from thundersvm import SVC
 from sklearn.metrics import balanced_accuracy_score
 import glob
 import numpy as np
@@ -45,11 +46,10 @@ def calculate_fitness(individual, X_train, X_test, y_train, y_test):
     ]
 
     clf = SVC(C=100,
-              gamma='scale',
               kernel='rbf',
               class_weight='balanced',
               random_state=seed,
-              max_iter=iter_limit)
+              gpu_id=1)
     clf.fit(X_train_sel, y_train)
     y_pred = clf.predict(X_test_sel)
     return balanced_accuracy_score(y_test, y_pred)
@@ -235,8 +235,8 @@ if __name__ == '__main__':
     num_best = 10
     population_size = 200
     num_generations = 30
-    num_parents = 50
-    num_offspring = 150
+    num_parents = 15
+    num_offspring = 15
     inf_lim = 0.00
     sup_lim = 1.00
     mut_prob = 0
