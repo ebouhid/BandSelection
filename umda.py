@@ -11,6 +11,7 @@ import logging
 # Get command line arguments
 exp_name = str(sys.argv[1])
 seed = int(sys.argv[2])
+iter_limit = int(1e5)
 
 # Set random seed
 np.random.seed(seed)
@@ -48,7 +49,7 @@ def calculate_fitness(individual, X_train, X_test, y_train, y_test):
               kernel='rbf',
               class_weight='balanced',
               random_state=seed,
-              max_iter=int(1e5))
+              max_iter=iter_limit)
     clf.fit(X_train_sel, y_train)
     y_pred = clf.predict(X_test_sel)
     return balanced_accuracy_score(y_test, y_pred)
@@ -158,6 +159,7 @@ def genetic_algorithm(X_train, X_test, y_train, y_test, population_size,
     logging.info(f'Superior limit: {sup_lim}')
     logging.info(f'Mutation probability: {mut_prob}')
     logging.info(f'Crossover probability: {xover_prob}')
+    logging.info(f'SVC iter limit: {iter_limit}')
 
     loop = tqdm(range(num_generations))
 
