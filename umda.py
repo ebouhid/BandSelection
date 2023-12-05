@@ -47,7 +47,8 @@ def calculate_fitness(individual, X_train, X_test, y_train, y_test):
               gamma='scale',
               kernel='rbf',
               class_weight='balanced',
-              random_state=seed)
+              random_state=seed,
+              max_iter=int(1e5))
     clf.fit(X_train_sel, y_train)
     y_pred = clf.predict(X_test_sel)
     return balanced_accuracy_score(y_test, y_pred)
@@ -56,7 +57,7 @@ def calculate_fitness(individual, X_train, X_test, y_train, y_test):
 def evaluate_population(population, X_train, X_test, y_train, y_test):
     return [
         calculate_fitness(individual, X_train, X_test, y_train, y_test)
-        for individual in population
+        for individual in tqdm(population, desc='Evaluating population')
     ]
 
 
