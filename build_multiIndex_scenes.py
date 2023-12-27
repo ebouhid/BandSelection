@@ -51,7 +51,7 @@ if __name__ == "__main__":
 
     # Compute spectral indexes
     for scene, path in tqdm(scenes, desc='Computing spectral indexes'):
-        scene = scene.transpose(2, 0, 1) / 255.
+        scene = scene / 255.
         scene = np.array(np.where(scene == 0., 1e-6, scene), dtype=np.float64)
         region = get_region(path)
         nans = np.count_nonzero(np.isnan(scene))
