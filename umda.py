@@ -1,6 +1,5 @@
 import random
-# from sklearn.svm import SVC
-from thundersvm import SVC
+from sklearn.svm import SVC
 from sklearn.metrics import balanced_accuracy_score
 import glob
 import numpy as np
@@ -41,7 +40,6 @@ def calculate_fitness(individual, X_train, X_test, y_train, y_test):
     X_train_sel = [
         segment[selected_bands, :, :].reshape(-1) for segment in X_train
     ]
-    print(f'X_train_sel[0].shape: {X_train_sel[0].shape}')
     X_test_sel = [
         segment[selected_bands, :, :].reshape(-1) for segment in X_test
     ]
@@ -50,7 +48,7 @@ def calculate_fitness(individual, X_train, X_test, y_train, y_test):
               kernel='rbf',
               class_weight='balanced',
               random_state=seed,
-              gpu_id=1)
+              )
     clf.fit(X_train_sel, y_train)
     y_pred = clf.predict(X_test_sel)
     return balanced_accuracy_score(y_test, y_pred)

@@ -48,7 +48,7 @@ if __name__ == "__main__":
 
     scope = 'test' if region in test_regions else 'val' if region in val_region else 'train'
 
-    image_path = f'scenes_multiIndex/{region}.npy'
+    image_path = f'scenes_allbands/{region}.npy'
     image = np.load(image_path)
 
     truth_path = f'truth_masks/truth_{region}.npy'
