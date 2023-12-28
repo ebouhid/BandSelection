@@ -12,7 +12,6 @@ import logging
 exp_name = str(sys.argv[1])
 seed = int(sys.argv[2])
 gpu_id = int(sys.argv[3])
-iter_limit = int(1e5)
 
 # Set random seed
 np.random.seed(seed)
@@ -34,7 +33,6 @@ def calculate_fitness(individual, X_train, X_test, y_train, y_test):
     Calculate the fitness of an individual by training an SVM classifier and
     evaluating its performance using accuracy.
     """
-    print(f'individual: {individual}')
     selected_bands = list(np.nonzero(individual)[0])
 
     X_train_sel = [
@@ -54,10 +52,11 @@ def calculate_fitness(individual, X_train, X_test, y_train, y_test):
     return balanced_accuracy_score(y_test, y_pred)
 
 
-def evaluate_population(population, X_train, X_test, y_train, y_test):
+def evaluate_population(population, X_train, X_test, y_train, y_test, generation=None):
+    msg = f'Generation {generation}' if generation else 'Final Evaluation'
     return [
         calculate_fitness(individual, X_train, X_test, y_train, y_test)
-        for individual in tqdm(population, desc='Evaluating population')
+        for individual in tqdm(population, desc=msg)
     ]
 
 
@@ -158,14 +157,13 @@ def genetic_algorithm(X_train, X_test, y_train, y_test, population_size,
     logging.info(f'Superior limit: {sup_lim}')
     logging.info(f'Mutation probability: {mut_prob}')
     logging.info(f'Crossover probability: {xover_prob}')
-    logging.info(f'SVC iter limit: {iter_limit}')
 
-    loop = tqdm(range(num_generations))
+    loop = range(num_generations)
 
     for generation in loop:
         # Evaluate fitness
         scores = evaluate_population(population, X_train, X_test, y_train,
-                                     y_test)
+                                     y_test, generation)
 
         # Log the 3 best individuals
         scores_df = pd.DataFrame()
