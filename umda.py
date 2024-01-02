@@ -53,7 +53,7 @@ def calculate_fitness(individual, X_train, X_test, y_train, y_test):
 
 
 def evaluate_population(population, X_train, X_test, y_train, y_test, generation=None):
-    msg = f'Generation {generation}' if generation else 'Final Evaluation'
+    msg = f'Generation {generation}' if generation else 'First Evaluation'
     return [
         calculate_fitness(individual, X_train, X_test, y_train, y_test)
         for individual in tqdm(population, desc=msg)
