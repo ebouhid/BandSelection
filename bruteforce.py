@@ -43,25 +43,35 @@ def evaluate_combination(combination, X_train, X_test, y_train, y_test):
 
 if __name__ == "__main__":
     # Loading dataset
-    X_all = []
-    y_all = []
-    for path in glob.glob(f'data/forest/*'):
-        X_all.append(np.load(path))
-        y_all.append(0)
+    # Training set
+    X_train = []
+    y_train = []
+    for filename in glob.glob('data/classification_dataset/train/forest/*'):
+        X_train.append(np.load(filename))
+        y_train.append(0)
+    for filename in glob.glob('data/classification_dataset/train/non_forest/*'):
+        X_train.append(np.load(filename))
+        y_train.append(1)
 
-    for path in glob.glob(f'data/non_forest/*'):
-        X_all.append(np.load(path))
-        y_all.append(1)
-
-    # perform split
-    X_train, X_val, y_train, y_val = train_test_split(X_all,
-                                                      y_all,
-                                                      test_size=0.3,
-                                                      random_state=seed)
-    X_val, X_test, y_val, y_test = train_test_split(X_val,
-                                                    y_val,
-                                                    test_size=0.5,
-                                                    random_state=seed + 1)
+    # Validation set
+    X_val = []
+    y_val = []
+    for filename in glob.glob('data/classification_dataset/val/forest/*'):
+        X_val.append(np.load(filename))
+        y_val.append(0)
+    for filename in glob.glob('data/classification_dataset/val/non_forest/*'):
+        X_val.append(np.load(filename))
+        y_val.append(1)
+    
+    # Test set
+    X_test = []
+    y_test = []
+    for filename in glob.glob('data/classification_dataset/test/forest/*'):
+        X_test.append(np.load(filename))
+        y_test.append(0)
+    for filename in glob.glob('data/classification_dataset/test/non_forest/*'):
+        X_test.append(np.load(filename))
+        y_test.append(1)
 
     # Generate all possible combinations of 7-element arrays consisting of 0s and 1s
     combinations = np.array(list(np.ndindex((2, ) * 7)))
