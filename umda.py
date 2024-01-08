@@ -123,7 +123,7 @@ def generate_offspring(parents, num_offspring, distribution, inf_lim, sup_lim,
     for _ in range(num_offspring):
         for i in range(len(distribution)):
             distribution[i] = distribution[i] if (
-                inf_lim < distribution[i] < sup_lim) else 0
+                inf_lim <= distribution[i] <= sup_lim) else 0
         individual = [
             random.choices([0, 1], weights=[1 - p, p])[0] for p in distribution
         ]
