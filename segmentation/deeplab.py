@@ -34,13 +34,13 @@ compositions = {
 train_regions = [1, 2, 6, 7, 8, 9, 10]  # Do not use region 5 anywhere
 test_regions = [3, 4]
 for COMPOSITION in compositions:
-    TRACKING_FNAME = f'./results/{INFO}-{COMPOSITION}-power.csv'
-    # Start GPU power draw tracking
-    stop_event = threading.Event()
-    tracking_thread = threading.Thread(target=track_gpu,
-                                       args=(TRACKING_INTERVAL, TRACKING_FNAME,
-                                             stop_event))
-    tracking_thread.start()
+    # TRACKING_FNAME = f'./results/{INFO}-{COMPOSITION}-power.csv'
+    # # Start GPU power draw tracking
+    # stop_event = threading.Event()
+    # tracking_thread = threading.Thread(target=track_gpu,
+    #                                    args=(TRACKING_INTERVAL, TRACKING_FNAME,
+    #                                          stop_event))
+    # tracking_thread.start()
 
     CHANNELS = len(compositions[COMPOSITION])
     # (model, loss, lr)
@@ -185,8 +185,8 @@ for COMPOSITION in compositions:
 
             end = time.time()
             execution_time = end - start
-            stop_event.set()
-            tracking_thread.join()
+            # stop_event.set()
+            # tracking_thread.join()
 
             # Convert execution time to minutes and seconds
             minutes = int(execution_time // 60)

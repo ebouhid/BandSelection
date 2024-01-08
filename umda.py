@@ -49,7 +49,7 @@ def calculate_fitness(individual, X_train, X_test, y_train, y_test):
               kernel='rbf',
               class_weight='balanced',
               random_state=seed,
-              gpu_id=1)
+              gpu_id=0)
     clf.fit(X_train_sel, y_train)
     y_pred = clf.predict(X_test_sel)
     return balanced_accuracy_score(y_test, y_pred)
@@ -233,7 +233,7 @@ if __name__ == '__main__':
 
     # call the genetic algorithm
     num_best = 10
-    population_size = 200
+    population_size = 30
     num_generations = 30
     num_parents = 15
     num_offspring = 15
