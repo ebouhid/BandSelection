@@ -9,7 +9,6 @@ import time
 import numpy as np
 import os
 import threading
-# from gpuprofiling import track_gpu
 
 BATCH_SIZE = 32
 NUM_EPOCHS = 100
@@ -27,21 +26,14 @@ compositions = {
     "43": [4, 3],
     "431": [4, 3, 1],
     "4316": [4, 3, 1, 6],
+    "4317": [4, 3, 1, 7],
     "4617": [4, 6, 1, 7],
-    "All+NDVI": range(1, 8),
+    "All+NDVI": range(1, 9),
 }
 
-train_regions = [1, 2, 6, 7, 9, 10]  # Do not use region 5 anywhere; x08 is validation
+train_regions = [1, 2, 6, 7, 8, 9, 10]  # Do not use region 5 anywhere
 test_regions = [3, 4]
 for COMPOSITION in compositions:
-    # TRACKING_FNAME = f'./results/{INFO}-{COMPOSITION}-power.csv'
-    # # Start GPU power draw tracking
-    # stop_event = threading.Event()
-    # tracking_thread = threading.Thread(target=track_gpu,
-    #                                    args=(TRACKING_INTERVAL, TRACKING_FNAME,
-    #                                          stop_event))
-    # tracking_thread.start()
-
     CHANNELS = len(compositions[COMPOSITION])
     # (model, loss, lr)
     configs = [
