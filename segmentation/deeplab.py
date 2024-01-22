@@ -21,13 +21,8 @@ DEVICE = "cuda:0"
 os.environ['MLFLOW_EXPERIMENT_NAME'] = INFO
 
 compositions = {
-    "4": [4],
-    "43": [4, 3],
-    "431": [4, 3, 1],
-    "4316": [4, 3, 1, 6],
     "4317": [4, 3, 1, 7],
-    "4617": [4, 6, 1, 7],
-    "All+NDVI": range(1, 9),
+    "43167": [4, 3, 1, 6, 7],
 }
 
 train_regions = [1, 2, 6, 7, 8, 9, 10]  # Do not use region 5 anywhere
@@ -39,10 +34,10 @@ for COMPOSITION in compositions:
         (smp.DeepLabV3Plus(
             in_channels=CHANNELS,
             classes=NUM_CLASSES,
-            activation=None,
+            activation='sigmoid',
             encoder_name='resnet101',
             encoder_weights=None,
-        ), smp.utils.losses.BCEWithLogitsLoss(), 5e-4),
+        ), smp.utils.losses.JaccardLoss(), 5e-4),
     ]
 
     for (model, loss, lr) in configs:
