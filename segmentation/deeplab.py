@@ -39,10 +39,10 @@ for COMPOSITION in compositions:
         (smp.DeepLabV3Plus(
             in_channels=CHANNELS,
             classes=NUM_CLASSES,
-            activation='sigmoid',
+            activation=None,
             encoder_name='resnet101',
             encoder_weights=None,
-        ), smp.utils.losses.JaccardLoss(), 5e-4),
+        ), smp.utils.losses.BCEWithLogitsLoss(), 5e-4),
     ]
 
     for (model, loss, lr) in configs:
