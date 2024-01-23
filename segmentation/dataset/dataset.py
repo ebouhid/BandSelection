@@ -62,7 +62,7 @@ class XinguDataset(Dataset):
                     height_p, width_p = patch_image.shape[:2]
                     # rotation
                     angle = 0
-                    if self.transforms is not None:
+                    if self.transforms:
                         while angle < 360:
                             rot_matrix = cv2.getRotationMatrix2D(
                                 (width_p / 2, height_p / 2), angle, 1.5)
@@ -87,7 +87,7 @@ class XinguDataset(Dataset):
                     # mask augmentation goes here
                     height_p, width_p = patch_image.shape[:2]
                     angle = 0
-                    if self.transforms is not None:
+                    if self.transforms:
                         while angle < 360:
                             rot_matrix = cv2.getRotationMatrix2D(
                                 (width_p / 2, height_p / 2), angle, 1.5)
