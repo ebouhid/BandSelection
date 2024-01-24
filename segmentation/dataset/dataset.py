@@ -30,7 +30,7 @@ class XinguDataset(Dataset):
 
         self.regions = regions
         self.transforms = transforms
-        self.angle_inc = 90
+        self.angle_inc = 45
 
         # load scenes
         for img_scene in self.image_paths:
