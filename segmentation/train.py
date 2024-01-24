@@ -12,13 +12,13 @@ INFO = 'Local_FromScratch'
 MODEL_NAME = str(sys.argv[1])
 
 # Set hyperparameters
-BATCH_SIZE = 64
+BATCH_SIZE = 32
 NUM_EPOCHS = 100
 PATCH_SIZE = 256
 STRIDE_SIZE = 64
 NUM_CLASSES = 1
 DATASET_DIR = './dataset/scenes_allbands_ndvi'
-TRUTH_DIR = './dataset/truth_masks'
+GT_DIR = './dataset/truth_masks'
 
 # Set compositions
 compositions = {
@@ -43,18 +43,20 @@ for COMPOSITION in compositions:
 
     # Instantiating datasets
     train_ds = XinguDataset(DATASET_DIR,
-                            TRUTH_DIR,
+                            GT_DIR,
                             compositions[COMPOSITION],
                             train_regions,
                             patch_size=PATCH_SIZE,
                             stride_size=STRIDE_SIZE,
+                            reflect_pad=False,
                             transforms=True)
     test_ds = XinguDataset(DATASET_DIR,
-                           TRUTH_DIR,
+                           GT_DIR,
                            compositions[COMPOSITION],
                            test_regions,
                            patch_size=PATCH_SIZE,
                            stride_size=PATCH_SIZE,
+                           reflect_pad=True,
                            transforms=False)
 
     # Instantiating dataloaders
