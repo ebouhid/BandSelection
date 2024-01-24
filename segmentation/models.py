@@ -13,7 +13,7 @@ class SegmentationModelsPytorch_PL(pl.LightningModule):
                  in_channels,
                  num_classes,
                  activation='sigmoid',
-                 encoder_name='resnet34',
+                 encoder_name='resnet101',
                  encoder_weights=None):
         super().__init__()
 
