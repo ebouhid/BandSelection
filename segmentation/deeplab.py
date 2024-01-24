@@ -62,13 +62,19 @@ for COMPOSITION in compositions:
                                     train_regions,
                                     PATCH_SIZE,
                                     STRIDE_SIZE,
+                                    reflect_pad=False,
                                     transforms=True)
             test_ds = XinguDataset('./dataset/scenes_allbands_ndvi',
                                    './dataset/truth_masks',
                                    compositions[COMPOSITION],
                                    test_regions,
                                    PATCH_SIZE,
-                                   PATCH_SIZE)
+                                   PATCH_SIZE,
+                                   reflect_pad=True,
+                                   transforms=False)
+
+            print(f"Train dataset size: {len(train_ds)}")
+            print(f"Test dataset size: {len(test_ds)}")
 
             optimizer = torch.optim.Adam([
                 dict(params=model.parameters(), lr=lr),
