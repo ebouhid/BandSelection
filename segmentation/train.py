@@ -4,9 +4,10 @@ import models
 import pytorch_lightning as pl
 import sys
 from mlflowmodelcheckpoint import MLFlowModelCheckpoint
+from pytorch_lightning.callbacks import ModelCheckpoint
 
 # Set experiment name
-INFO = 'Local_FromScratch'
+INFO = 'LightningTest'
 
 # Get model name as command line argument
 MODEL_NAME = str(sys.argv[1])
@@ -83,10 +84,10 @@ for COMPOSITION in compositions:
     logger.log_hyperparams({"train_regions": train_regions})
     logger.log_hyperparams({"test_regions": test_regions})
 
+    # Instantiating checkpoint callback
+    checkpoint_callback = ModelCheckpoint(monitor='val_iou', save_top_k=1, mode='max', verbose=True, save_last=True)
+
     # Instantiating trainer
-    checkpoint_callback = MLFlowModelCheckpoint(mlflow_logger=logger,
-                                                monitor='val_iou',
-                                                verbose=True)
     trainer = pl.Trainer(max_epochs=NUM_EPOCHS,
                          logger=logger,
                          callbacks=[checkpoint_callback])
