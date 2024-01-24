@@ -16,3 +16,4 @@ pids.txt
 scenes_multiIndex
 .ipynb_checkpoints/
 build_umda_dataset_outs/
+segmentation/outputs/latex_table.txt
