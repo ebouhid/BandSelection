@@ -21,8 +21,13 @@ DEVICE = "cuda:0"
 os.environ['MLFLOW_EXPERIMENT_NAME'] = INFO
 
 compositions = {
+    "4": [4],
+    "43": [4, 3],
+    "431": [4, 3, 1],
+    "4316": [4, 3, 1, 6],
     "4317": [4, 3, 1, 7],
     "43167": [4, 3, 1, 6, 7],
+    "All+NDVI": range(1, 9),
 }
 
 train_regions = [1, 2, 6, 7, 8, 9, 10]  # Do not use region 5 anywhere
@@ -63,8 +68,7 @@ for COMPOSITION in compositions:
                                    compositions[COMPOSITION],
                                    test_regions,
                                    PATCH_SIZE,
-                                   PATCH_SIZE,
-                                   transforms=False)
+                                   PATCH_SIZE)
 
             optimizer = torch.optim.Adam([
                 dict(params=model.parameters(), lr=lr),
