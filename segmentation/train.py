@@ -85,7 +85,7 @@ for COMPOSITION in compositions:
     logger.log_hyperparams({"test_regions": test_regions})
 
     # Instantiating checkpoint callback
-    checkpoint_callback = ModelCheckpoint(monitor='val_iou', save_top_k=1, mode='max', verbose=True, save_last=True)
+    checkpoint_callback = ModelCheckpoint(dirpath='./models/', filename=f'{INFO}-{MODEL_NAME}-{COMPOSITION}', monitor='val_iou', save_top_k=1, mode='max', verbose=True, save_last=True)
 
     # Instantiating trainer
     trainer = pl.Trainer(max_epochs=NUM_EPOCHS,
