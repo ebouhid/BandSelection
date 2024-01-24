@@ -74,6 +74,40 @@ if __name__ == '__main__':
                         predicted_masks.append(predicted_mask)
                         patch_counts.append((x, y))
 
+                        predicted_mask = np.where(predicted_mask > 0.5, 1, 0)
+
+                        # Identify true positives, true negatives, false positives, and false negatives for the patch
+                        truth_mask_patch = truth_mask[y:y+patch_size[1], x:x+patch_size[0]]
+                        
+                        true_positives = np.logical_and(truth_mask_patch == 1, predicted_mask == 1)
+                        true_negatives = np.logical_and(truth_mask_patch == 0, predicted_mask == 0)
+                        false_positives = np.logical_and(truth_mask_patch == 0, predicted_mask == 1)
+                        false_negatives = np.logical_and(truth_mask_patch == 1, predicted_mask == 0)
+
+                        # Calculate the number of true positives, true negatives, false positives, and false negatives
+                        tp = np.sum(true_positives)
+                        tn = np.sum(true_negatives)
+                        fp = np.sum(false_positives)
+                        fn = np.sum(false_negatives)
+
+                        # Calculate metrics
+                        true_positives = np.sum(true_positives)
+                        true_negatives = np.sum(true_negatives)
+                        false_positives = np.sum(false_positives)
+                        false_negatives = np.sum(false_negatives)
+
+                        accuracy = (tp + tn) / (tp + tn + fp + fn)
+                        precision = tp / (tp + fp)
+                        recall = tp / (tp + fn)
+                        f1_score = 2 * precision * recall / (precision + recall)
+                        iou = tp / (tp + fp + fn)
+                        
+                        accuracy_list.append(accuracy)
+                        precision_list.append(precision)
+                        recall_list.append(recall)
+                        f1_list.append(f1_score)
+                        iou_list.append(iou)
+
                 # Create an empty result image with the same size as the input image
                 concatenated_pred = np.zeros((y + patch_size[1], x + patch_size[0]))
 
@@ -101,48 +135,20 @@ if __name__ == '__main__':
                     # print(f'mask_accumulator.shape: {mask_accumulator.shape}')
                     mask_accumulator[y1:y2, x1:x2] += mask_region
 
-                threshold = 0.5
-                concatenated_pred = np.where(mask_accumulator >= threshold, 1, 0)
-
                 # Might add a confusion mask generation block here
-
-                # Identify true positives, true negatives, false positives, and false negatives
-                truth_mask = truth_mask[:concatenated_pred.shape[0], :concatenated_pred.shape[1], :].squeeze()
-
-                true_positives = np.logical_and(truth_mask == 1, concatenated_pred == 1)
-                true_negatives = np.logical_and(truth_mask == 0, concatenated_pred == 0)
-                false_positives = np.logical_and(truth_mask == 0, concatenated_pred == 1)
-                false_negatives = np.logical_and(truth_mask == 1, concatenated_pred == 0)
-
-                # Calculate the number of true positives, true negatives, false positives, and false negatives
-                tp = np.sum(true_positives)
-                tn = np.sum(true_negatives)
-                fp = np.sum(false_positives)
-                fn = np.sum(false_negatives)
-
-                # Calculate metrics
-                true_positives = np.sum(true_positives)
-                true_negatives = np.sum(true_negatives)
-                false_positives = np.sum(false_positives)
-                false_negatives = np.sum(false_negatives)
-
-                accuracy = (true_positives + true_negatives) / (true_positives + true_negatives + false_positives + false_negatives)
-                precision = true_positives / (true_positives + false_positives)
-                recall = true_positives / (true_positives + false_negatives)
-                f1_score = 2 * precision * recall / (precision + recall)
-                iou = true_positives / (true_positives + false_positives + false_negatives)
-                
-                accuracy_list.append(accuracy)
-                precision_list.append(precision)
-                recall_list.append(recall)
-                f1_list.append(f1_score)
-                iou_list.append(iou)
         
             accuracy_avg = np.mean(accuracy_list)
             precision_avg = np.mean(precision_list)
             recall_avg = np.mean(recall_list)
             f1_avg = np.mean(f1_list)
             iou_avg = np.mean(iou_list)
+
+            print(f"Composition: {composition}")
+            print(f'Accuracy list: {accuracy_list}')
+            print(f'Precision list: {precision_list}')
+            print(f'Recall list: {recall_list}')
+            print(f'F1 list: {f1_list}')
+            print(f'IoU list: {iou_list}')
 
             # Write in latex format
             f.write(f"{composition} & {precision_avg * 100:.2f} & {recall_avg * 100:.2f} & {f1_avg * 100:.2f} & {accuracy_avg * 100:.2f} & {iou_avg * 100:.2f} \\ \hline \n")
