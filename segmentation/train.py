@@ -3,11 +3,12 @@ from dataset.dataset import XinguDataset
 import models
 import pytorch_lightning as pl
 import sys
-from mlflowmodelcheckpoint import MLFlowModelCheckpoint
 from pytorch_lightning.callbacks import ModelCheckpoint
+import mlflow
 
 # Set experiment name
 INFO = 'LightningTest'
+mlflow.set_experiment(INFO)
 
 # Get model name as command line argument
 MODEL_NAME = str(sys.argv[1])
@@ -50,7 +51,7 @@ for COMPOSITION in compositions:
                             patch_size=PATCH_SIZE,
                             stride_size=STRIDE_SIZE,
                             reflect_pad=False,
-                            transforms=True)
+                            transforms=False)
     test_ds = XinguDataset(DATASET_DIR,
                            GT_DIR,
                            compositions[COMPOSITION],
@@ -71,25 +72,28 @@ for COMPOSITION in compositions:
                                               num_workers=8)
 
     # Instantiating logger
-    logger = pl.loggers.MLFlowLogger(experiment_name=INFO)
-
-    # Log model hyperparameters
-    logger.log_hyperparams({"model": model.__class__.__name__})
-    logger.log_hyperparams({"composition": COMPOSITION})
-    logger.log_hyperparams({"batch_size": BATCH_SIZE})
-    logger.log_hyperparams({"num_epochs": NUM_EPOCHS})
-    logger.log_hyperparams({"patch_size": PATCH_SIZE})
-    logger.log_hyperparams({"stride_size": STRIDE_SIZE})
-    logger.log_hyperparams({"num_classes": NUM_CLASSES})
-    logger.log_hyperparams({"train_regions": train_regions})
-    logger.log_hyperparams({"test_regions": test_regions})
+    mlflow.pytorch.autolog()
+    mlflow.log_params({
+        'model_name': MODEL_NAME,
+        'batch_size': BATCH_SIZE,
+        'num_epochs': NUM_EPOCHS,
+        'patch_size': PATCH_SIZE,
+        'stride_size': STRIDE_SIZE,
+        'num_classes': NUM_CLASSES,
+        'dataset_dir': DATASET_DIR,
+        'gt_dir': GT_DIR,
+        'composition': COMPOSITION,
+        'train_regions': train_regions,
+        'test_regions': test_regions,
+        'train_size': len(train_ds),
+        'test_size': len(test_ds)
+    })
 
     # Instantiating checkpoint callback
     checkpoint_callback = ModelCheckpoint(dirpath='./models/', filename=f'{INFO}-{MODEL_NAME}-{COMPOSITION}', monitor='val_iou', save_top_k=1, mode='max', verbose=True, save_last=True)
 
     # Instantiating trainer
     trainer = pl.Trainer(max_epochs=NUM_EPOCHS,
-                         logger=logger,
                          callbacks=[checkpoint_callback])
 
     # Training
