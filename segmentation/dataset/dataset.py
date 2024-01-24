@@ -98,7 +98,7 @@ class XinguDataset(Dataset):
                             continue
                     
                     # mask augmentation goes here
-                    height_p, width_p = patch_image.shape[:2]
+                    height_p, width_p = patch_mask.shape[:2]
                     angle = 0
                     if self.transforms:
                         while angle < 360:
