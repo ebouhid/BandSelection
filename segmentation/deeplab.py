@@ -11,10 +11,10 @@ import os
 import threading
 
 BATCH_SIZE = 32
-NUM_EPOCHS = 100
+NUM_EPOCHS = 20
 PATCH_SIZE = 256
 STRIDE_SIZE = 64
-INFO = 'UMDA_Compositions'
+INFO = 'ShortScale'
 NUM_CLASSES = 1
 DEVICE = "cuda:0"
 
@@ -63,7 +63,7 @@ for COMPOSITION in compositions:
                                     PATCH_SIZE,
                                     STRIDE_SIZE,
                                     reflect_pad=False,
-                                    transforms=True)
+                                    transforms=False)
             test_ds = XinguDataset('./dataset/scenes_allbands_ndvi',
                                    './dataset/truth_masks',
                                    compositions[COMPOSITION],
