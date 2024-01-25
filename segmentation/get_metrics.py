@@ -20,7 +20,7 @@ if __name__ == '__main__':
         "4317": [4, 3, 1, 7],
         "4316": [4, 3, 1, 6],
         "43167": [4, 3, 1, 6, 7],
-        "PCA": range(1, 4)
+        # "PCA": range(1, 4)
     }
 
     # Convert to 0-based indexing
@@ -48,7 +48,7 @@ if __name__ == '__main__':
                 
                 height, width, _ = image.shape
 
-                model = torch.load(f'models/UMDA_Compositions-DeepLabV3Plus-{composition}.pth')
+                model = torch.load(f'models/ShortScale-DeepLabV3Plus-{composition}.pth')
 
                 model.eval()
 
@@ -56,10 +56,15 @@ if __name__ == '__main__':
                 patch_counts = []
 
                 # Iterate through patches
-                for y in range(0, height - patch_size[1], stride):
-                    for x in range(0, width - patch_size[0], stride):
+                for y in range(0, height, stride):
+                    for x in range(0, width, stride):
                         # Crop the patch from the input image
                         patch = image[y:y + patch_size[1], x:x + patch_size[0], :]
+                        # Check for dimensions
+                        if patch.shape[0] != patch_size[0] or patch.shape[1] != patch_size[1]:
+                            rightpad = patch_size[0] - patch.shape[1]
+                            bottompad = patch_size[1] - patch.shape[0]
+                            patch = np.pad(patch, ((0, bottompad),(0, rightpad), (0, 0)), mode='reflect')
                         patch = torch.tensor((np.transpose(patch, (2, 0, 1))/ 255.0), device='cuda')
 
                         # Make predictions using the model
@@ -78,6 +83,10 @@ if __name__ == '__main__':
 
                         # Identify true positives, true negatives, false positives, and false negatives for the patch
                         truth_mask_patch = truth_mask[y:y+patch_size[1], x:x+patch_size[0]]
+                        if truth_mask_patch.shape[0] != patch_size[0] or truth_mask_patch.shape[1] != patch_size[1]:
+                            rightpad = patch_size[0] - truth_mask_patch.shape[1]
+                            bottompad = patch_size[1] - truth_mask_patch.shape[0]
+                            truth_mask_patch = np.pad(truth_mask_patch, ((0, bottompad),(0, rightpad), (0, 0)), mode='reflect')
                         
                         true_positives = np.logical_and(truth_mask_patch == 1, predicted_mask == 1)
                         true_negatives = np.logical_and(truth_mask_patch == 0, predicted_mask == 0)
