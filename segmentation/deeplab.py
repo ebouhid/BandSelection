@@ -14,7 +14,7 @@ BATCH_SIZE = 32
 NUM_EPOCHS = 100
 PATCH_SIZE = 256
 STRIDE_SIZE = 64
-INFO = 'UMDA_Compositions'
+INFO = 'UMDA_Compositions_Imagenet'
 NUM_CLASSES = 1
 DEVICE = "cuda:0"
 
@@ -41,7 +41,7 @@ for COMPOSITION in compositions:
             classes=NUM_CLASSES,
             activation='sigmoid',
             encoder_name='resnet101',
-            encoder_weights=None,
+            encoder_weights='imagenet',
         ), smp.utils.losses.JaccardLoss(), 5e-4),
     ]
 
