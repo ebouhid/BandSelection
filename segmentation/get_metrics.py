@@ -117,35 +117,6 @@ if __name__ == '__main__':
                         recall_list.append(recall)
                         f1_list.append(f1_score)
                         iou_list.append(iou)
-
-                # Create an empty result image with the same size as the input image
-                concatenated_pred = np.zeros((y + patch_size[1], x + patch_size[0]))
-
-                # Create an empty mask with the same size as the patches
-                mask_accumulator = np.zeros((y + patch_size[1], x + patch_size[0]))
-
-                # Combine the predicted masks into the result image
-                for mask, (x, y) in zip(predicted_masks, patch_counts):
-                    x1, x2 = x, x + patch_size[0]
-                    y1, y2 = y, y + patch_size[1]
-
-                    # Clip the patch and mask to fit within the image boundaries
-                    x1, x2 = max(0, x1), min(width, x2)
-                    y1, y2 = max(0, y1), min(height, y2)
-
-                    # Calculate the clipped patch dimensions
-                    patch_width = x2 - x1
-                    patch_height = y2 - y1
-
-                    # Calculate the corresponding mask region
-                    mask_region = mask[:patch_height, :patch_width]
-
-                    # Add the mask region to the accumulator
-                    # print(f'x1: {x1}, x2: {x2}, y1: {y1}, y2: {y2}')
-                    # print(f'mask_accumulator.shape: {mask_accumulator.shape}')
-                    mask_accumulator[y1:y2, x1:x2] += mask_region
-
-                # Might add a confusion mask generation block here
         
             accuracy_avg = np.mean(accuracy_list)
             precision_avg = np.mean(precision_list)
@@ -166,13 +137,14 @@ if __name__ == '__main__':
 
             # Also add to a pandas dataframe
             df.append({
-                "Composition": [composition],
-                "Precision": [precision_avg * 100],
-                "Recall": [recall_avg * 100],
-                "F1": [f1_avg * 100],
-                "Accuracy": [accuracy_avg * 100],
-                "IoU": [iou_avg * 100]
+                "Composition": composition,
+                "Precision": precision_avg * 100,
+                "Recall": recall_avg * 100,
+                "F1": f1_avg * 100,
+                "Accuracy": accuracy_avg * 100,
+                "IoU": iou_avg * 100
             })
 
         df = pd.DataFrame(df)
-        df.to_csv("outputs/results.csv")
+        df = df.sort_values(by="IoU", ascending=False)  
+        df.to_excel("outputs/results_byhand.xlsx", index=False)
