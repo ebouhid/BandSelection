@@ -19,6 +19,14 @@ def get_hor(segment):
 
     return HoR
 
+def normalize_band(band):
+    # Normalize band to uint8
+    band = band - np.min(band)
+    band = band / (np.max(band)) * 255
+    band = band.astype(np.uint8)
+
+    return band
+
 def get_major_class(segment):
     segment = np.array(segment, dtype=np.uint8)
     if np.argmax(np.bincount(segment.flatten())) == 2:
@@ -48,8 +56,16 @@ if __name__ == "__main__":
 
     scope = 'test' if region in test_regions else 'val' if region in val_region else 'train'
 
+    # Create directories
+    os.makedirs(f'data/classification_dataset/{scope}/forest', exist_ok=True)
+    os.makedirs(f'data/classification_dataset/{scope}/non_forest', exist_ok=True)
+
     image_path = f'scenes_allbands_ndvi/{region}.npy'
     image = np.load(image_path)
+    for i in range(image.shape[0]):
+        image[i, :, :] = normalize_band(image[i, :, :])
+    
+    image = np.array(image, dtype=np.uint8)
 
     truth_path = f'truth_masks/truth_{region}.npy'
     truth = np.load(truth_path)
