@@ -1,5 +1,5 @@
 import random
-from sklearn.svm import SVC
+from thundersvm import SVC
 from sklearn.metrics import balanced_accuracy_score
 import glob
 import numpy as np
@@ -46,6 +46,7 @@ def calculate_fitness(individual, X_train, X_test, y_train, y_test):
               kernel='rbf',
               class_weight='balanced',
               random_state=seed,
+              gpu_id=gpu_id
               )
     clf.fit(X_train_sel, y_train)
     y_pred = clf.predict(X_test_sel)
@@ -123,7 +124,7 @@ def generate_offspring(parents, num_offspring, distribution, inf_lim, sup_lim,
     for _ in range(num_offspring):
         for i in range(len(distribution)):
             distribution[i] = distribution[i] if (
-                inf_lim < distribution[i] < sup_lim) else 0
+                inf_lim <= distribution[i] <= sup_lim) else 0
         individual = [
             random.choices([0, 1], weights=[1 - p, p])[0] for p in distribution
         ]
