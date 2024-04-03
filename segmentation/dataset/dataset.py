@@ -13,6 +13,7 @@ class XinguDataset(Dataset):
                  regions,
                  patch_size,
                  stride_size,
+                 reflect_pad=False,
                  transforms=None):
         self.composition = composition
         self.patch_size = patch_size
@@ -51,18 +52,24 @@ class XinguDataset(Dataset):
         for image in self.images:
             height, width, _ = image.shape
             for i in range(0, height, self.stride_size):
-                if (i + self.patch_size) > height:
-                    continue
                 for j in range(0, width, self.stride_size):
-                    if (j + self.patch_size) > width:
-                        continue
                     patch_image = image[i:i + self.patch_size,
                                         j:j + self.patch_size, :]
+                    
+                    # Dimension check; Pad if necessary
+                    if patch_image.shape[0] != self.patch_size or patch_image.shape[1] != self.patch_size:
+                        if reflect_pad:
+                            rightpad = self.patch_size - patch_image.shape[1]
+                            bottompad = self.patch_size - patch_image.shape[0]
+                            patch_image = np.pad(patch_image, ((0, bottompad),(0, rightpad), (0,0)), mode='reflect')
+                        else:
+                            continue
+                    
                     # image augmentation goes here
                     height_p, width_p = patch_image.shape[:2]
                     # rotation
                     angle = 0
-                    if self.transforms is not None:
+                    if self.transforms:
                         while angle < 360:
                             rot_matrix = cv2.getRotationMatrix2D(
                                 (width_p / 2, height_p / 2), angle, 1.5)
@@ -77,17 +84,23 @@ class XinguDataset(Dataset):
         for mask in self.masks:
             height, width = mask.shape
             for i in range(0, height, self.stride_size):
-                if i + self.patch_size > height:
-                    continue
                 for j in range(0, width, self.stride_size):
-                    if j + self.patch_size > width:
-                        continue
                     patch_mask = mask[i:i + self.patch_size,
                                       j:j + self.patch_size]
+                    
+                    # Dimension check; Pad if necessary
+                    if patch_mask.shape[0] != self.patch_size or patch_mask.shape[1] != self.patch_size:
+                        if reflect_pad:
+                            rightpad = self.patch_size - patch_mask.shape[1]
+                            bottompad = self.patch_size - patch_mask.shape[0]
+                            patch_mask = np.pad(patch_mask, ((0, bottompad),(0, rightpad)), mode='reflect')
+                        else:
+                            continue
+                    
                     # mask augmentation goes here
-                    height_p, width_p = patch_image.shape[:2]
+                    height_p, width_p = patch_mask.shape[:2]
                     angle = 0
-                    if self.transforms is not None:
+                    if self.transforms:
                         while angle < 360:
                             rot_matrix = cv2.getRotationMatrix2D(
                                 (width_p / 2, height_p / 2), angle, 1.5)

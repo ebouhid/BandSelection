@@ -1,4 +1,0 @@
-Command: python deeplab.py
-PID: 4558
-Command: python deeplab_pca.py
-PID: 29093

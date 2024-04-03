@@ -13,7 +13,7 @@ class SegmentationModelsPytorch_PL(pl.LightningModule):
                  in_channels,
                  num_classes,
                  activation='sigmoid',
-                 encoder_name='resnet34',
+                 encoder_name='resnet101',
                  encoder_weights=None):
         super().__init__()
 
@@ -66,13 +66,12 @@ class SegmentationModelsPytorch_PL(pl.LightningModule):
         train_iou = np.float64(self.train_iou(outputs, targets))
 
         # Log metrics
-        self.logger.log_metrics({'train_loss': np.float64(loss)})
-        self.logger.log_metrics({'train_accuracy': train_accuracy})
-        self.logger.log_metrics({'train_precision': train_precision})
-        self.logger.log_metrics({'train_recall': train_recall})
-        self.logger.log_metrics({'train_f1': train_f1})
-        self.logger.log_metrics({'train_iou': train_iou})
-        self.logger.log_metrics({'lr': self.lr})
+        self.log('train_loss', loss, on_epoch=True)
+        self.log('train_accuracy', train_accuracy, on_epoch=True)
+        self.log('train_precision', train_precision, on_epoch=True)
+        self.log('train_recall', train_recall, on_epoch=True)
+        self.log('train_f1', train_f1, on_epoch=True)
+        self.log('train_iou', train_iou, on_epoch=True)
 
         return loss
 
@@ -80,7 +79,8 @@ class SegmentationModelsPytorch_PL(pl.LightningModule):
         inputs, targets = batch
         outputs = self.model(inputs)
 
-        # Calculate validation metrics
+        # Calculate loss and validation metrics
+        loss = self.loss(outputs, targets)
         val_accuracy = np.float64(self.val_accuracy(outputs, targets))
         val_precision = np.float64(self.val_precision(outputs, targets))
         val_recall = np.float64(self.val_recall(outputs, targets))
@@ -88,11 +88,9 @@ class SegmentationModelsPytorch_PL(pl.LightningModule):
         val_iou = np.float64(self.val_iou(outputs, targets))
 
         # Log metrics
-        self.logger.log_metrics({'val_accuracy': val_accuracy})
-        self.logger.log_metrics({'val_precision': val_precision})
-        self.logger.log_metrics({'val_recall': val_recall})
-        self.logger.log_metrics({'val_f1': val_f1})
-        self.logger.log_metrics({'val_iou': val_iou})
-
-        # This is needed for the MLflowModelCheckpoint callback
-        self.log('val_iou', val_iou)
+        self.log('val_loss', loss, on_epoch=True)
+        self.log('val_accuracy', val_accuracy, on_epoch=True)
+        self.log('val_precision', val_precision, on_epoch=True)
+        self.log('val_recall', val_recall, on_epoch=True)
+        self.log('val_f1', val_f1, on_epoch=True)
+        self.log('val_iou', val_iou, on_epoch=True)
