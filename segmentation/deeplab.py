@@ -11,24 +11,23 @@ import os
 import threading
 # from gpuprofiling import track_gpu
 
-BATCH_SIZE = 64
-NUM_EPOCHS = 200
+BATCH_SIZE = 32
+NUM_EPOCHS = 100
 PATCH_SIZE = 256
 STRIDE_SIZE = 64
-INFO = 'Test_gibbon'
+INFO = 'UMDA_Compositions'
 NUM_CLASSES = 1
 TRACKING_INTERVAL = 0.1
-DEVICE = "cuda:1"
+DEVICE = "cuda:0"
 
 os.environ['MLFLOW_EXPERIMENT_NAME'] = INFO
 
 compositions = {
-    "6": [6],
-    "65": [6, 5],
-    "651": [6, 5, 1],
-    "RGB": [4, 3, 2],
-    "6514": [6, 5, 1, 4],
-    "6517": [6, 5, 1, 7],
+    "4": [4],
+    "43": [4, 3],
+    "431": [4, 3, 1],
+    "4316": [4, 3, 1, 6],
+    "4617": [4, 6, 1, 7],
     "All+NDVI": range(1, 8),
 }
 
@@ -50,7 +49,7 @@ for COMPOSITION in compositions:
             in_channels=CHANNELS,
             classes=NUM_CLASSES,
             activation='sigmoid',
-            encoder_name='resnet34',
+            encoder_name='resnet101',
             encoder_weights=None,
         ), smp.utils.losses.JaccardLoss(), 5e-4),
     ]
