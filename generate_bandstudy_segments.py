@@ -60,20 +60,21 @@ if __name__ == "__main__":
     os.makedirs(f'data/classification_dataset/{scope}/forest', exist_ok=True)
     os.makedirs(f'data/classification_dataset/{scope}/non_forest', exist_ok=True)
 
-    image_path = f'scenes_allbands_ndvi/{region}.npy'
+    image_path = f'scenes_sentinel_ndvi/{region}.npy'
     image = np.load(image_path)
     for i in range(image.shape[0]):
         image[i, :, :] = normalize_band(image[i, :, :])
     
     image = np.array(image, dtype=np.uint8)
 
-    truth_path = f'truth_masks/truth_{region}.npy'
+    truth_path = f'truth_masks_sentinel/truth_{region}.npy'
     truth = np.load(truth_path)
 
-    slic_path = f'slics/slic_{region}-pca.npy'
+    slic_path = f'slics_sentinel/mask_slic_{region}.npy'
     slic = np.load(slic_path)
 
     assert truth.shape[:2] == slic.shape[:2]
+    assert truth.shape[:2] == image.shape[:2]
 
     props = regionprops(slic)
 
@@ -81,14 +82,14 @@ if __name__ == "__main__":
 
     for prop in tqdm(props, desc=f'Processing {region}'):
         minr, minc, maxr, maxc = prop.bbox
-        segment_image = image[:, minr:maxr, minc:maxc]
+        segment_image = image[minr:maxr, minc:maxc, :]
         segment_truth = truth[minr:maxr, minc:maxc]
         segment_class = get_major_class(segment_truth)
         segment_id = prop.label                
 
         if evaluate_segment(segment_truth):
             # Computing Haralick features for the segment
-            segment_haralick = [mahotas.features.haralick(segment_image[channel, :, :]) for channel in range(segment_image.shape[0])]
+            segment_haralick = [mahotas.features.haralick(segment_image[:, :, channel]) for channel in range(segment_image.shape[2])]
 
             # Saving haralick segment
             np.save(f'data/classification_dataset/{scope}/{segment_class}/{region}_{segment_id}.npy', segment_haralick)
