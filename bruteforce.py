@@ -73,8 +73,8 @@ if __name__ == "__main__":
         X_test.append(np.load(filename))
         y_test.append(1)
 
-    # Generate all possible combinations of 7-element arrays consisting of 0s and 1s
-    combinations = np.array(list(np.ndindex((2, ) * 7)))
+    # Generate all possible combinations of 9-element arrays consisting of 0s and 1s
+    combinations = np.array(list(np.ndindex((2, ) * 9)))
 
     results = []
 
