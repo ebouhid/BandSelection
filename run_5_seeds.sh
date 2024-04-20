@@ -1,5 +1,4 @@
 export EXP_NAME=$1
-export GPU_ID=$2
 
 mkdir results/$EXP_NAME
 nohup python umda.py $EXP_NAME 1 0 > results/$EXP_NAME/genetic-1.out 2>&1 &
