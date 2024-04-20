@@ -6,26 +6,42 @@ from tqdm import tqdm
 import sys
 
 
+def is_mixed(segment):
+    # flattening segment
+    segment = segment.flatten()
+
+    NFP = np.count_nonzero(segment == 2)
+    NP = np.count_nonzero(segment) # desconsiderando o fundo (np.zeros)
+    NNP = NP - NFP
+
+    if NFP != 0 and NNP != 0:
+        return True
+    
+
+    return False
+    
 def get_hor(segment):
     # flattening segment
     segment = segment.flatten()
 
-
-    NFP = np.count_nonzero(segment == 2)
-    NP = np.count_nonzero(segment) # not considering background
+    NFP = np.where(segment == 0, 1, 0).sum()
+    NP = segment.size
     NNP = NP - NFP
 
     HoR = max([NFP, NNP]) / NP
 
     return HoR
 
-def normalize_band(band):
-    # Normalize band to uint8
-    band = band - np.min(band)
-    band = band / (np.max(band)) * 255
-    band = band.astype(np.uint8)
-
-    return band
+def get_major_class(segment):
+    if np.argmax(np.bincount(segment.flatten())) == 0:
+        return "forest"
+    elif np.argmax(np.bincount(segment.flatten())) == 1:
+        return "non forest"
+    else:
+        return np.argmax(np.bincount(segment.flatten()))
+    
+def get_region(path):
+    return f"{path.split('/')[-1].split('.')[0].split('_')[-1].split('-')[0]}"
 
 def get_major_class(segment):
     segment = np.array(segment, dtype=np.uint8)
@@ -41,7 +57,7 @@ def get_major_class(segment):
 def evaluate_segment(segment):
     classification = get_major_class(segment)
 
-    if (segment.shape[0] * segment.shape[1] > 70) and (get_hor(segment > 0.7))\
+    if (segment.shape[0] * segment.shape[1] > 630) and (get_hor(segment > 0.7))\
         and (classification in ["forest", "non_forest"]):
         return True
 
@@ -61,16 +77,12 @@ if __name__ == "__main__":
     os.makedirs(f'data/classification_dataset/{scope}/non_forest', exist_ok=True)
 
     image_path = f'scenes_sentinel_ndvi/{region}.npy'
-    image = np.load(image_path)
-    for i in range(image.shape[0]):
-        image[i, :, :] = normalize_band(image[i, :, :])
-    
-    image = np.array(image, dtype=np.uint8)
+    image = np.load(image_path).astype(np.uint8)
 
     truth_path = f'truth_masks_sentinel/truth_{region}.npy'
     truth = np.load(truth_path)
 
-    slic_path = f'slics_sentinel/mask_slic_{region}.npy'
+    slic_path = f'slics_sentinel/slic_{region}.npy'
     slic = np.load(slic_path)
 
     assert truth.shape[:2] == slic.shape[:2]
