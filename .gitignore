@@ -16,11 +16,8 @@ pids.txt
 scenes_multiIndex
 .ipynb_checkpoints/
 build_umda_dataset_outs/
-<<<<<<< HEAD
 data/
 scenes*/
 slics*/
 truth*/
-=======
-segmentation/outputs/
->>>>>>> 682b6126c1ddfddb006e29240b7d2191df29949e
+segmentation/predictions/
