@@ -1,14 +1,10 @@
 from sklearn.decomposition import PCA
-from sklearn.preprocessing import scale, MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler
 import os
 import numpy as np
 from PIL import Image
 import argparse
 
-
-def band_norm(band):
-    band_min, band_max = band.min(), band.max()
-    return ((band - band_min) / (band_max - band_min))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PCA for satellite scenes')
@@ -24,7 +20,10 @@ if __name__ == '__main__':
         multispectral_data = np.load(os.path.join(args.input_dir, path))
         w, h, ch = multispectral_data.shape
         multispectral_data = np.reshape(multispectral_data, (w * h, ch))
-        multispectral_data = scale(multispectral_data, axis=1)
+        print(f'unique before scaling: {np.unique(multispectral_data)}')
+        zero_one_scaler = MinMaxScaler()
+        multispectral_data = zero_one_scaler.fit_transform(multispectral_data)
+        print(f'unique after scaling: {np.unique(multispectral_data)}')
 
         pca = PCA(n_components=3)
         principal_components = pca.fit_transform(multispectral_data)
