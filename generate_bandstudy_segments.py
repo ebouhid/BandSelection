@@ -5,26 +5,11 @@ import os
 from tqdm import tqdm
 import sys
 
-
-def is_mixed(segment):
-    # flattening segment
-    segment = segment.flatten()
-
-    NFP = np.count_nonzero(segment == 2)
-    NP = np.count_nonzero(segment) # desconsiderando o fundo (np.zeros)
-    NNP = NP - NFP
-
-    if NFP != 0 and NNP != 0:
-        return True
-    
-
-    return False
-    
 def get_hor(segment):
     # flattening segment
     segment = segment.flatten()
 
-    NFP = np.where(segment == 0, 1, 0).sum()
+    NFP = np.where(segment == 2, 1, 0).sum()
     NP = segment.size
     NNP = NP - NFP
 
@@ -33,26 +18,13 @@ def get_hor(segment):
     return HoR
 
 def get_major_class(segment):
-    if np.argmax(np.bincount(segment.flatten())) == 0:
+    if np.argmax(np.bincount(segment.flatten())) == 2:
         return "forest"
-    elif np.argmax(np.bincount(segment.flatten())) == 1:
-        return "non forest"
     else:
-        return np.argmax(np.bincount(segment.flatten()))
+        return "non_forest"
     
 def get_region(path):
     return f"{path.split('/')[-1].split('.')[0].split('_')[-1].split('-')[0]}"
-
-def get_major_class(segment):
-    segment = np.array(segment, dtype=np.uint8)
-    if np.argmax(np.bincount(segment.flatten())) == 2:
-        return "forest"
-    elif np.argmax(np.bincount(segment.flatten())) == 1:
-        return "non_forest"
-    elif np.argmax(np.bincount(segment.flatten())) == 3:
-        return "not analyzed"
-    else:
-        return np.argmax(np.bincount(segment.flatten()))
     
 def evaluate_segment(segment):
     classification = get_major_class(segment)
