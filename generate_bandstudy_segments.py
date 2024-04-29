@@ -40,7 +40,7 @@ if __name__ == "__main__":
     region = sys.argv[1]
 
     val_region = ['x08']
-    test_regions = ['x01', 'x03']
+    test_regions = ['x03', 'x04']
 
     scope = 'test' if region in test_regions else 'val' if region in val_region else 'train'
 
@@ -48,7 +48,7 @@ if __name__ == "__main__":
     os.makedirs(f'data/classification_dataset/{scope}/forest', exist_ok=True)
     os.makedirs(f'data/classification_dataset/{scope}/non_forest', exist_ok=True)
 
-    image_path = f'scenes_sentinel_ndvi/{region}.npy'
+    image_path = f'scenes_sentinel/{region}.npy'
     image = np.load(image_path).astype(np.uint8)
 
     truth_path = f'truth_masks_sentinel/truth_{region}.npy'
