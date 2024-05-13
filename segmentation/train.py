@@ -5,9 +5,10 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
 import mlflow
 import albumentations as A
+from GBCLoss import GBCLoss
 
 # Set experiment name
-INFO = 'Sentinel2'
+INFO = 'GBCLoss_Comparison'
 mlflow.set_experiment(INFO)
 
 # Set hyperparameters
@@ -19,8 +20,8 @@ STRIDE_SIZE = 64
 NUM_CLASSES = 1
 DATASET_DIR = './data/scenes_sentinel_ndvi'
 GT_DIR = './data/truth_masks_sentinel'
-COMPOSITION = range(1, 10)
-compname = ''.join([str(i) for i in COMPOSITION]) if COMPOSITION != range(1, 10) else "All+NDVI"
+COMPOSITION = [4, 3, 2]
+compname = '' + ''.join([str(i) for i in COMPOSITION]) if COMPOSITION != range(1, 10) else "All+NDVI"
 
 # Set regions
 train_regions = [2, 4, 6, 7, 8, 9, 10]  # Do not use region 5 anywhere
@@ -60,11 +61,11 @@ test_ds = XinguDataset(DATASET_DIR,
 train_loader = torch.utils.data.DataLoader(train_ds,
                                             batch_size=BATCH_SIZE,
                                             shuffle=True,
-                                            num_workers=8)
+                                            num_workers=16)
 test_loader = torch.utils.data.DataLoader(test_ds,
                                             batch_size=BATCH_SIZE,
                                             shuffle=False,
-                                            num_workers=8)
+                                            num_workers=16)
 
 # Instantiating logger
 mlflow.pytorch.autolog()
