@@ -115,7 +115,7 @@ class DeforestationDetectionModel(pl.LightningModule):
 
         os.makedirs('predictions', exist_ok=True)
         # Get images and patchify
-        for region in ["x01", "x03"]:
+        for region in ["x03", "x04"]:
             image = np.load(f'data/scenes_sentinel_ndvi/{region}.npy')
             # Normalize image
             image = (image - np.min(image)) / (np.max(image) - np.min(image))
