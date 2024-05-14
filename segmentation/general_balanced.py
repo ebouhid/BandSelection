@@ -1,6 +1,25 @@
 import torch
 import torch.nn as nn
 
+
+class GBC(nn.Module):
+    def __init__(self, k=10):
+        self.k = k
+        super(GBC, self).__init__()
+    
+    def forward(self, pred, truth):
+        TP = torch.sum(pred * truth)
+        FN = torch.sum(truth) - TP
+        FP = torch.sum(pred) - TP
+        norm_O = TP + FN
+        numerator = (norm_O - FP)*(norm_O - FN)
+        denominator = norm_O**2
+
+        gbc = numerator / denominator
+
+        return gbc
+        
+
 class GBCLoss(nn.Module):
     def __init__(self, k=10):
         self.k = k
@@ -10,12 +29,13 @@ class GBCLoss(nn.Module):
         TP = torch.sum(pred * truth)
         FN = torch.sum(truth) - TP
         FP = torch.sum(pred) - TP
-        
-        numerator = (TP + FN - FP) * TP
-        denominator = (TP + FN) ** 2
+        norm_O = TP + FN
+        numerator = (norm_O - FP)*(norm_O - FN)
+        denominator = norm_O**2
         
         gbc = numerator / denominator
-        return 1 - gbc
+        gbc_loss = 1 - gbc
+        return gbc_loss
 
     def backward(self, pred, truth):
         p_i = pred
