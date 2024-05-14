@@ -116,11 +116,11 @@ class DeforestationDetectionModel(pl.LightningModule):
         os.makedirs('predictions', exist_ok=True)
         # Get images and patchify
         for region in ["x03", "x04"]:
-            image = np.load(f'data/scenes_sentinel_ndvi/{region}.npy')
+            image = np.load(f'data/scenes_allbands_ndvi/allbands_ndvi_{region}.npy')
             # Normalize image
             image = (image - np.min(image)) / (np.max(image) - np.min(image))
 
-            truth = np.load(f'data/truth_masks_sentinel/truth_{region}.npy')
+            truth = np.load(f'data/truth_masks/truth_{region}.npy')
             # Adjust to binary segmentation
             truth = np.where(truth == 2, 0, 1)
 
@@ -140,7 +140,9 @@ class DeforestationDetectionModel(pl.LightningModule):
             image_patches = patchified_image["patches"]
             image_patchcounts = patchified_image["patch_counts"]
             # Patchify truth
-            patchified_truth = patchify(np.expand_dims(truth, axis=2), patch_size, stride)
+            if len(truth.shape) < 3:
+                truth = np.expand_dims(truth, axis=2)
+            patchified_truth = patchify(truth, patch_size, stride)
             truth_patches = patchified_truth["patches"]
             truth_patchcounts = patchified_truth["patch_counts"]
             print(len(image_patches), len(truth_patches))
