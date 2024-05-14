@@ -224,8 +224,11 @@ class DeforestationDetectionModel(pl.LightningModule):
                 filename += f"_gamma{str(self.gamma).replace('.', '')}"
             filename += '.png'
             
-            cv2.putText(confusion_mask, metrics_str, (0, height + 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-            cv2.putText(confusion_mask, model_info_str, (0, height + 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+            # Calculate font size based on confusion_mask size
+            font_size = confusion_mask.shape[1] / 1000 * 0.8
+            thickness = int(font_size * 2)
+            cv2.putText(confusion_mask, metrics_str, (0, height + 50), cv2.FONT_HERSHEY_SIMPLEX, font_size, (0, 255, 0), 2)
+            cv2.putText(confusion_mask, model_info_str, (0, height + 100), cv2.FONT_HERSHEY_SIMPLEX, font_size, (0, 255, 0), 2)
             confusion_mask = cv2.cvtColor(confusion_mask, cv2.COLOR_BGR2RGB)
             cv2.imwrite(filename, confusion_mask)
 
