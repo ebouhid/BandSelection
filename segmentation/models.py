@@ -8,7 +8,7 @@ import math
 from copy import deepcopy
 import cv2
 import os
-
+from general_balanced import GBC, functional_gbc
 class DeforestationDetectionModel(pl.LightningModule):
     def __init__(self, in_channels, composition_name, loss, encoder_name='resnet101', lr=1e-3, encoder_weights='imagenet', debug=False):
         super().__init__()
@@ -48,6 +48,8 @@ class DeforestationDetectionModel(pl.LightningModule):
         self.val_f1 = torchmetrics.F1Score(task='binary')
         self.train_iou = torchmetrics.JaccardIndex(task='binary')
         self.val_iou = torchmetrics.JaccardIndex(task='binary')
+        self.train_gbc = GBC(k=10)
+        self.val_gbc = GBC(k=10)
 
     def forward(self, x):
         return self.model(x)
@@ -76,6 +78,7 @@ class DeforestationDetectionModel(pl.LightningModule):
         train_recall = np.float64(self.train_recall(outputs, targets))
         train_f1 = np.float64(self.train_f1(outputs, targets))
         train_iou = np.float64(self.train_iou(outputs, targets))
+        train_gbc = np.float64(self.train_gbc(outputs, targets))
 
         # Log metrics
         self.log('train_loss', loss, on_epoch=True, sync_dist=True)
@@ -84,6 +87,7 @@ class DeforestationDetectionModel(pl.LightningModule):
         self.log('train_recall', train_recall, on_epoch=True, sync_dist=True)
         self.log('train_f1', train_f1, on_epoch=True, sync_dist=True)
         self.log('train_iou', train_iou, on_epoch=True, sync_dist=True)
+        self.log('train_gbc', train_gbc, on_epoch=True, sync_dist=True)
 
         return loss
 
@@ -98,6 +102,7 @@ class DeforestationDetectionModel(pl.LightningModule):
         val_recall = np.float64(self.val_recall(outputs, targets))
         val_f1 = np.float64(self.val_f1(outputs, targets))
         val_iou = np.float64(self.val_iou(outputs, targets))
+        val_gbc = np.float64(self.val_gbc(outputs, targets))
 
         # Log metrics
         self.log('val_loss', loss, on_epoch=True, sync_dist=True)
@@ -106,6 +111,7 @@ class DeforestationDetectionModel(pl.LightningModule):
         self.log('val_recall', val_recall, on_epoch=True, sync_dist=True)
         self.log('val_f1', val_f1, on_epoch=True, sync_dist=True)
         self.log('val_iou', val_iou, on_epoch=True, sync_dist=True)
+        self.log('val_gbc', val_gbc, on_epoch=True, sync_dist=True)
 
         return val_f1
     
@@ -204,6 +210,7 @@ class DeforestationDetectionModel(pl.LightningModule):
             f1 = 2 * (precision * recall) / (precision + recall)
             accuracy = (true_positives + true_negatives) / (true_positives + false_positives + false_negatives + true_negatives)
             iou = true_positives / (true_positives + false_positives + false_negatives)
+            gbc = functional_gbc(true_positives, true_negatives, false_positives, false_negatives)
 
             # Extend lower part of confusion mask for writing text
             confusion_mask = np.pad(confusion_mask, ((0, 200), (0, 75), (0, 0)), mode='constant', constant_values=0)
@@ -211,6 +218,7 @@ class DeforestationDetectionModel(pl.LightningModule):
 
             # Write metrics on image
             metrics_str = f"Precision: {precision :.2f} | Recall: {recall :.2f} | F1: {f1 :.2f} | Accuracy: {accuracy :.2f} | IoU: {iou :.2f}"
+            gbc_str = f"GBC: {gbc :.2f}"
             model_info_str = f"Composition: {composition} | Loss: {loss}"
             filename = f'predictions/{region}_{composition}_{loss}'
             if self.alpha is not None:
@@ -228,6 +236,7 @@ class DeforestationDetectionModel(pl.LightningModule):
             font_size = confusion_mask.shape[1] / 1000 * 0.8
             thickness = int(font_size * 2)
             cv2.putText(confusion_mask, metrics_str, (0, height + 50), cv2.FONT_HERSHEY_SIMPLEX, font_size, (0, 255, 0), 2)
+            cv2.putText(confusion_mask, gbc_str, (0, height + 75), cv2.FONT_HERSHEY_SIMPLEX, font_size, (0, 255, 0), 2)
             cv2.putText(confusion_mask, model_info_str, (0, height + 100), cv2.FONT_HERSHEY_SIMPLEX, font_size, (0, 255, 0), 2)
             confusion_mask = cv2.cvtColor(confusion_mask, cv2.COLOR_BGR2RGB)
             cv2.imwrite(filename, confusion_mask)
