@@ -1,6 +1,14 @@
 import torch
 import torch.nn as nn
 
+def functional_gbc(tp, tn, fp, fn):
+    norm_O = tp + fn
+    numerator = (norm_O - fp)*(norm_O - fn)
+    denominator = norm_O**2
+
+    gbc = numerator / denominator
+
+    return gbc
 
 class GBC(nn.Module):
     def __init__(self, k=10):
@@ -9,13 +17,11 @@ class GBC(nn.Module):
     
     def forward(self, pred, truth):
         TP = torch.sum(pred * truth)
+        TN = torch.sum((1 - pred) * (1 - truth))
         FN = torch.sum(truth) - TP
         FP = torch.sum(pred) - TP
-        norm_O = TP + FN
-        numerator = (norm_O - FP)*(norm_O - FN)
-        denominator = norm_O**2
 
-        gbc = numerator / denominator
+        gbc = functional_gbc(TP, TN, FP, FN)     
 
         return gbc
         
