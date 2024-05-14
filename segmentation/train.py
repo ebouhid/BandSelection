@@ -5,7 +5,7 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
 import mlflow
 import albumentations as A
-from GBCLoss import GBCLoss
+import general_balanced as gb
 
 # Set experiment name
 INFO = 'GBCLoss_Comparison'
@@ -13,14 +13,14 @@ mlflow.set_experiment(INFO)
 
 # Set hyperparameters
 MODEL_NAME = 'DeepLabV3Plus'
-BATCH_SIZE = 32
+BATCH_SIZE = 16
 NUM_EPOCHS = 100
 PATCH_SIZE = 256
 STRIDE_SIZE = 64
 NUM_CLASSES = 1
-DATASET_DIR = './data/scenes_sentinel_ndvi'
-GT_DIR = './data/truth_masks_sentinel'
-COMPOSITION = [4, 3, 2]
+DATASET_DIR = './data/scenes_allbands_ndvi'
+GT_DIR = './data/truth_masks'
+COMPOSITION = [6, 5, 1]
 compname = '' + ''.join([str(i) for i in COMPOSITION]) if COMPOSITION != range(1, 10) else "All+NDVI"
 
 # Set regions
