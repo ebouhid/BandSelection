@@ -244,7 +244,9 @@ class DeforestationDetectionModel(pl.LightningModule):
             # Extend lower part of confusion mask for writing text
             if self.fold_num is not None:
                 vertical_pad = 300
-                fold_info_str = f"Fold: {self.fold_num} | Train Regions: {self.train_regions} | Test Regions: {self.test_regions}"
+                fold_str = f"Fold: {self.fold_num}"
+                train_regions_str = f"Train Regions: {self.train_regions}"
+                test_regions_str = f"Test Regions: {self.test_regions}"
             else:
                 vertical_pad = 200
             confusion_mask = np.pad(confusion_mask, ((
@@ -278,7 +280,11 @@ class DeforestationDetectionModel(pl.LightningModule):
                         cv2.FONT_HERSHEY_SIMPLEX, font_size, (0, 255, 0), 2)
             cv2.putText(confusion_mask, model_info_str, (0, height + 120),
                         cv2.FONT_HERSHEY_SIMPLEX, font_size, (0, 255, 0), 2)
-            cv2.putText(confusion_mask, fold_info_str, (0, height + 155),
+            cv2.putText(confusion_mask, fold_str, (0, height + 155),
+                        cv2.FONT_HERSHEY_SIMPLEX, font_size, (0, 255, 0), 2)
+            cv2.putText(confusion_mask, train_regions_str, (0, height + 200),
+                        cv2.FONT_HERSHEY_SIMPLEX, font_size, (0, 255, 0), 2)
+            cv2.putText(confusion_mask, test_regions_str, (0, height + 245),
                         cv2.FONT_HERSHEY_SIMPLEX, font_size, (0, 255, 0), 2)
             confusion_mask = cv2.cvtColor(confusion_mask, cv2.COLOR_BGR2RGB)
             cv2.imwrite(filename, confusion_mask)
