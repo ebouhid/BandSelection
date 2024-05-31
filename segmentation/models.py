@@ -62,7 +62,7 @@ class DeforestationDetectionModel(pl.LightningModule):
         self.test_regions = [f"x{region :02d}" for region in test_regions]
 
     def configure_optimizers(self):
-        optimizer = torch.optim.SGD(self.parameters(), lr=self.lr)
+        optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
         scheduler = {
             'scheduler': ReduceLROnPlateau(optimizer, patience=5, factor=0.9, mode='min', verbose=True),
             'monitor': 'val_loss',
@@ -143,13 +143,13 @@ class DeforestationDetectionModel(pl.LightningModule):
             # Normalize image
             image = (image - np.min(image)) / (np.max(image) - np.min(image))
 
-            truth = np.load(f'data/truth_masks/truth_{region}.npy')
+            truth = np.load(f'data/truth_masks/truth_{region}.npy').squeeze()
             # Adjust to binary segmentation
             truth = np.where(truth == 2, 0, 1)
 
             height, width, _ = image.shape
-            width = math.ceil(width / stride) * stride
-            height = math.ceil(height / stride) * stride
+            newwidth = math.ceil(width / stride) * stride
+            newheight = math.ceil(height / stride) * stride
 
             composition = self.composition_name
             loss = self.loss.__class__.__name__
@@ -163,15 +163,6 @@ class DeforestationDetectionModel(pl.LightningModule):
             patchified_image = patchify(image, patch_size, stride)
             image_patches = patchified_image["patches"]
             image_patchcounts = patchified_image["patch_counts"]
-            # Patchify truth
-            if len(truth.shape) < 3:
-                truth = np.expand_dims(truth, axis=2)
-            patchified_truth = patchify(truth, patch_size, stride)
-            truth_patches = patchified_truth["patches"]
-            truth_patchcounts = patchified_truth["patch_counts"]
-            print(len(image_patches), len(truth_patches))
-            assert len(image_patches) == len(
-                truth_patches), "Image and truth patches don't match"
 
             # Load model
             model = deepcopy(self).eval()
@@ -192,16 +183,13 @@ class DeforestationDetectionModel(pl.LightningModule):
                 # cv2.imwrite(f'{pred_dir}/{region}_{composition}_{loss}_{x}_{y}.png', prediction.squeeze().cpu().numpy() * 255)
 
             # Stitch patches together
-            stitched_mask = np.zeros((height, width), dtype=np.uint8)
+            stitched_mask = np.zeros((newheight, newwidth), dtype=np.uint8)
             for mask, (x, y) in predicted_masks:
                 mask = mask.squeeze().cpu().numpy()
                 stitched_mask[x:x + patch_size[0], y:y + patch_size[1]] = mask
-
-            stitched_truth = np.zeros((height, width), dtype=np.uint8)
-            for truthpatch, (x, y) in zip(truth_patches, truth_patchcounts):
-                truthpatch = truthpatch.squeeze()
-                stitched_truth[x:x + patch_size[0],
-                               y:y + patch_size[1]] = truthpatch
+            
+            # Clip to original size
+            stitched_mask = stitched_mask[:height, :width]
 
             # Build confusion mask
             confusion_mask = np.zeros((height, width, 3))
@@ -210,17 +198,16 @@ class DeforestationDetectionModel(pl.LightningModule):
             false_negative_color = (1, 0, 0)
             true_negative_color = (0, 0, 0)
 
-            # print(np.unique(stitched_mask), stitched_mask.shape)
-            # print(np.unique(truth), truth.shape)
+            assert stitched_mask.shape == truth.shape, f"Shapes don't match: {stitched_mask.shape} and {truth.shape}"
 
             true_positives = np.logical_and(
-                stitched_mask == 1, stitched_truth == 1)
+                stitched_mask == 1, truth == 1)
             false_positives = np.logical_and(
-                stitched_mask == 1, stitched_truth == 0)
+                stitched_mask == 1, truth == 0)
             false_negatives = np.logical_and(
-                stitched_mask == 0, stitched_truth == 1)
+                stitched_mask == 0, truth == 1)
             true_negatives = np.logical_and(
-                stitched_mask == 0, stitched_truth == 0)
+                stitched_mask == 0, truth == 0)
             confusion_mask[true_positives] = true_positive_color
             confusion_mask[false_positives] = false_positive_color
             confusion_mask[false_negatives] = false_negative_color
@@ -272,20 +259,20 @@ class DeforestationDetectionModel(pl.LightningModule):
             filename += '.png'
 
             # Calculate font size based on confusion_mask size
-            font_size = confusion_mask.shape[1] / 1000 * 0.8
+            font_size = confusion_mask.shape[0] / 1000 * 0.8
             thickness = int(font_size * 2)
             cv2.putText(confusion_mask, metrics_str, (0, height + 50),
-                        cv2.FONT_HERSHEY_SIMPLEX, font_size, (0, 255, 0), 2)
+                        cv2.FONT_HERSHEY_SIMPLEX, font_size, (0, 255, 0), thickness)
             cv2.putText(confusion_mask, gbc_str, (0, height + 85),
-                        cv2.FONT_HERSHEY_SIMPLEX, font_size, (0, 255, 0), 2)
+                        cv2.FONT_HERSHEY_SIMPLEX, font_size, (0, 255, 0), thickness)
             cv2.putText(confusion_mask, model_info_str, (0, height + 120),
-                        cv2.FONT_HERSHEY_SIMPLEX, font_size, (0, 255, 0), 2)
+                        cv2.FONT_HERSHEY_SIMPLEX, font_size, (0, 255, 0), thickness)
             cv2.putText(confusion_mask, fold_str, (0, height + 155),
-                        cv2.FONT_HERSHEY_SIMPLEX, font_size, (0, 255, 0), 2)
+                        cv2.FONT_HERSHEY_SIMPLEX, font_size, (0, 255, 0), thickness)
             cv2.putText(confusion_mask, train_regions_str, (0, height + 200),
-                        cv2.FONT_HERSHEY_SIMPLEX, font_size, (0, 255, 0), 2)
+                        cv2.FONT_HERSHEY_SIMPLEX, font_size, (0, 255, 0), thickness)
             cv2.putText(confusion_mask, test_regions_str, (0, height + 245),
-                        cv2.FONT_HERSHEY_SIMPLEX, font_size, (0, 255, 0), 2)
+                        cv2.FONT_HERSHEY_SIMPLEX, font_size, (0, 255, 0), thickness)
             confusion_mask = cv2.cvtColor(confusion_mask, cv2.COLOR_BGR2RGB)
             cv2.imwrite(filename, confusion_mask)
 
