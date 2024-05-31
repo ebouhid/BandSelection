@@ -9,7 +9,7 @@ import general_balanced as gb
 from sklearn.model_selection import KFold
 
 # Set experiment name
-INFO = 'GBCLoss_Comparison'
+INFO = 'GBCLoss_Comparison_Adam'
 mlflow.set_experiment(INFO)
 
 # Set hyperparameters
@@ -29,6 +29,7 @@ compname = '' + ''.join([str(i) for i in COMPOSITION]
 regions = [1, 2, 3, 4, 6, 7, 8, 9, 10]  # Regions from 1 to 10 (excluding 5)
 
 loss = gb.GBCLoss(k=10)
+# loss = torch.nn.BCEWithLogitsLoss()
 
 aug = A.Compose([
     A.VerticalFlip(p=0.5),
@@ -109,3 +110,4 @@ for fold, (train_index, test_index) in enumerate(kfold.split(regions)):
 
     # Training
     trainer.fit(model, train_loader, test_loader)
+    mlflow.end_run()
