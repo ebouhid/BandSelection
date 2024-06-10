@@ -62,7 +62,7 @@ class DeforestationDetectionModel(pl.LightningModule):
         self.test_regions = [f"x{region :02d}" for region in test_regions]
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
+        optimizer = torch.optim.SGD(self.parameters(), lr=self.lr)
         scheduler = {
             'scheduler': ReduceLROnPlateau(optimizer, patience=5, factor=0.9, mode='min', verbose=True),
             'monitor': 'val_loss',
@@ -198,6 +198,9 @@ class DeforestationDetectionModel(pl.LightningModule):
             false_negative_color = (1, 0, 0)
             true_negative_color = (0, 0, 0)
 
+            # Save stitched mask
+            np.save(f'{pred_dir}/{region}_{composition}_{loss}.npy', stitched_mask)
+
             assert stitched_mask.shape == truth.shape, f"Shapes don't match: {stitched_mask.shape} and {truth.shape}"
 
             true_positives = np.logical_and(
@@ -240,6 +243,10 @@ class DeforestationDetectionModel(pl.LightningModule):
                 0, vertical_pad), (0, 75), (0, 0)), mode='constant', constant_values=0)
             confusion_mask = (confusion_mask * 255).astype(np.uint8)
 
+            # Extend right part of image for writing text
+            if confusion_mask.shape[1] < 1280:
+                confusion_mask = np.pad(confusion_mask, ((0, 0), (0, 1280 - confusion_mask.shape[1]), (0, 0)), mode='constant', constant_values=0)
+
             # Write metrics on image
             metrics_str = f"Precision: {precision :.2f} | Recall: {recall :.2f} | F1: {f1 :.2f} | Accuracy: {accuracy :.2f} | IoU: {iou :.2f}"
             gbc_str = f"GBC: {gbc :.2f}"
@@ -275,6 +282,15 @@ class DeforestationDetectionModel(pl.LightningModule):
                         cv2.FONT_HERSHEY_SIMPLEX, font_size, (0, 255, 0), thickness)
             confusion_mask = cv2.cvtColor(confusion_mask, cv2.COLOR_BGR2RGB)
             cv2.imwrite(filename, confusion_mask)
+
+            # Also save information to a .txt file
+            with open(f'{pred_dir}/{region}_{composition}_{loss}.txt', 'w') as f:
+                f.write(metrics_str + '\n')
+                f.write(gbc_str + '\n')
+                f.write(model_info_str + '\n')
+                f.write(fold_str + '\n')
+                f.write(train_regions_str + '\n')
+                f.write(test_regions_str + '\n')
 
 
 def patchify(array, patch_size, stride):
