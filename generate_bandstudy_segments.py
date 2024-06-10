@@ -20,6 +20,8 @@ def get_hor(segment):
 def get_major_class(segment):
     if np.argmax(np.bincount(segment.flatten())) == 2:
         return "forest"
+    elif np.argmax(np.bincount(segment.flatten())) == 3:
+        return "not_analyzed"
     else:
         return "non_forest"
     
@@ -29,7 +31,7 @@ def get_region(path):
 def evaluate_segment(segment):
     classification = get_major_class(segment)
 
-    if (segment.shape[0] * segment.shape[1] > 630) and (get_hor(segment > 0.7))\
+    if (segment.shape[0] * segment.shape[1] > 70) and (get_hor(segment > 0.7))\
         and (classification in ["forest", "non_forest"]):
         return True
 
@@ -48,13 +50,13 @@ if __name__ == "__main__":
     os.makedirs(f'data/classification_dataset/{scope}/forest', exist_ok=True)
     os.makedirs(f'data/classification_dataset/{scope}/non_forest', exist_ok=True)
 
-    image_path = f'scenes_sentinel/{region}.npy'
+    image_path = f'scenes_allbands/{region}.npy'
     image = np.load(image_path).astype(np.uint8)
 
-    truth_path = f'truth_masks_sentinel/truth_{region}.npy'
+    truth_path = f'truth_masks/truth_{region}.npy'
     truth = np.load(truth_path)
 
-    slic_path = f'slics_sentinel/slic_{region}.npy'
+    slic_path = f'slics/slic_{region}.npy'
     slic = np.load(slic_path)
 
     assert truth.shape[:2] == slic.shape[:2]
