@@ -1,1 +1,0 @@
-- Calculating SVM accuracy for the allbands and PCA-false-color segments. The SLIC mask used is, like in the UMDA experiment, PCA.
