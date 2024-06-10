@@ -29,8 +29,14 @@ compname = '' + ''.join([str(i) for i in COMPOSITION]
 # Set regions
 regions = [1, 2, 3, 4, 6, 7, 8, 9, 10]  # Regions from 1 to 10 (excluding 5)
 
-loss = gb.GBCLoss(k=10)
-# loss = torch.nn.BCEWithLogitsLoss()
+parser = argparse.ArgumentParser()
+parser.add_argument("--loss", type=str, choices=['bce', 'gbcloss'], default='bce')
+args = parser.parse_args()
+
+if args.loss == 'bce':
+    loss = torch.nn.BCEWithLogitsLoss()
+elif args.loss == 'gbcloss':
+    loss = gb.GBCLoss(k=10)
 
 aug = A.Compose([
     A.VerticalFlip(p=0.5),
