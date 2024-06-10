@@ -1,15 +1,16 @@
 import torch
 from data.dataset import XinguDataset
+from data.cross_val_iterator import CrossValidationIterator
 import models
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
 import mlflow
 import albumentations as A
 import general_balanced as gb
-from sklearn.model_selection import KFold
+import argparse
 
 # Set experiment name
-INFO = 'GBCLoss_Comparison_Adam'
+INFO = 'GBCLoss_Comparison_SGD'
 mlflow.set_experiment(INFO)
 
 # Set hyperparameters
@@ -42,12 +43,10 @@ aug = A.Compose([
     ], p=0.8)])
 
 # Instantiate KFold
-kfold = KFold(n_splits=3, shuffle=True, random_state=42)
+kfold = CrossValidationIterator(regions)
 
-for fold, (train_index, test_index) in enumerate(kfold.split(regions)):
+for fold, (train_regions, test_regions) in enumerate(kfold):
     compname = f'{compname}'
-    train_regions = [regions[i] for i in train_index]
-    test_regions = [regions[i] for i in test_index]
 
     train_ds = XinguDataset(DATASET_DIR,
                             GT_DIR,
@@ -70,7 +69,8 @@ for fold, (train_index, test_index) in enumerate(kfold.split(regions)):
     train_loader = torch.utils.data.DataLoader(train_ds,
                                                batch_size=BATCH_SIZE,
                                                shuffle=True,
-                                               num_workers=16)
+                                               num_workers=16,
+                                               drop_last=True)
     test_loader = torch.utils.data.DataLoader(test_ds,
                                               batch_size=BATCH_SIZE,
                                               shuffle=False,
@@ -106,7 +106,7 @@ for fold, (train_index, test_index) in enumerate(kfold.split(regions)):
 
     # Instantiating trainer
     trainer = pl.Trainer(max_epochs=NUM_EPOCHS,
-                         callbacks=[checkpoint_callback], accelerator="gpu", devices=-1)
+                         callbacks=[checkpoint_callback], accelerator="gpu", devices=[0, 1])
 
     # Training
     trainer.fit(model, train_loader, test_loader)
