@@ -7,14 +7,11 @@ import pandas as pd
 from tqdm import tqdm
 import sys
 import logging
+import argparse
 
 # Get command line arguments
 exp_name = str(sys.argv[1])
 seed = int(sys.argv[2])
-gpu_id = int(sys.argv[3])
-
-# Set random seed
-np.random.seed(seed)
 
 
 def generate_individual(num_features):
@@ -119,8 +116,7 @@ def estimate_distribution(selected_individuals, num_features):
     return distribution / len(selected_individuals)
 
 
-def generate_offspring(parents, num_offspring, distribution, inf_lim, sup_lim,
-                       mut_prob, xover_prob):
+def generate_offspring(parents, num_offspring, distribution, inf_lim, sup_lim):
     offspring = []
     for _ in range(num_offspring):
         for i in range(len(distribution)):
@@ -133,17 +129,13 @@ def generate_offspring(parents, num_offspring, distribution, inf_lim, sup_lim,
         if sum(individual) == 0:
             individual = generate_individual(len(individual))
         offspring.append(individual)
-    if xover_prob > 0:
-        offspring = crossover(offspring, num_offspring, xover_prob)
     
-    if mut_prob > 0:
-        offspring = mutation(offspring, mut_prob)
     return offspring
 
 
-def genetic_algorithm(X_train, X_test, y_train, y_test, population_size,
+def umda(X_train, X_test, y_train, y_test, population_size,
                       num_generations, num_parents, num_offspring, inf_lim,
-                      sup_lim, mut_prob, xover_prob):
+                      sup_lim):
     num_features = X_train[0].shape[0]
     population = generate_population(population_size, num_features)
 
@@ -158,8 +150,6 @@ def genetic_algorithm(X_train, X_test, y_train, y_test, population_size,
     logging.info(f'Number of offspring: {num_offspring}')
     logging.info(f'Inferior limit: {inf_lim}')
     logging.info(f'Superior limit: {sup_lim}')
-    logging.info(f'Mutation probability: {mut_prob}')
-    logging.info(f'Crossover probability: {xover_prob}')
 
     loop = range(num_generations)
 
@@ -182,7 +172,7 @@ def genetic_algorithm(X_train, X_test, y_train, y_test, population_size,
 
         distribution = estimate_distribution(parents, num_features)
         offspring = generate_offspring(parents, num_offspring, distribution,
-                                       inf_lim, sup_lim, mut_prob, xover_prob)
+                                       inf_lim, sup_lim)
 
         # Replace the population with offspring
         population = parents + offspring
@@ -200,6 +190,17 @@ def genetic_algorithm(X_train, X_test, y_train, y_test, population_size,
     return final_best_individuals
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--exp-name", type=str, default='lsat')
+    parser.add_argument("--seed", type=int, default=42)
+    args = parser.parse_args()
+    exp_name = args.exp_name
+    seed = args.seed
+
+    # Set random seed
+    np.random.seed(seed)
+    random.seed(seed)
+
     # Loading dataset
     # Training set
     X_train = []
@@ -231,20 +232,18 @@ if __name__ == '__main__':
         X_test.append(np.load(filename))
         y_test.append(1)
 
-    # call the genetic algorithm
-    num_best = 10
-    population_size = 120
-    num_generations = 4
-    num_parents = 30
-    num_offspring = 90
-    inf_lim = 0.05
-    sup_lim = 0.95
-    mut_prob = 0
-    xover_prob = 0
+    # Call UMDA
+    num_best = 15
+    population_size = 60
+    num_generations = 6
+    num_parents = 10
+    num_offspring = 50
+    inf_lim = 1/8
+    sup_lim = 7/8
 
-    results = genetic_algorithm(X_train, X_val, y_train, y_val, population_size,
+    results = umda(X_train, X_val, y_train, y_val, population_size,
                                 num_generations, num_parents, num_offspring,
-                                inf_lim, sup_lim, mut_prob, xover_prob)
+                                inf_lim, sup_lim)
 
     results['Test accuracy'] = results['Individual'].apply(
         lambda ind: calculate_fitness(ind, X_train, X_test, y_train, y_test))
