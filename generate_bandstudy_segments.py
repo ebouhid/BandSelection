@@ -50,13 +50,13 @@ if __name__ == "__main__":
     os.makedirs(f'data/classification_dataset/{scope}/forest', exist_ok=True)
     os.makedirs(f'data/classification_dataset/{scope}/non_forest', exist_ok=True)
 
-    image_path = f'scenes_allbands/{region}.npy'
+    image_path = f'data/scenes_allbands/{region}.npy'
     image = np.load(image_path).astype(np.uint8)
 
-    truth_path = f'truth_masks/truth_{region}.npy'
-    truth = np.load(truth_path)
+    truth_path = f'data/truth_masks/truth_{region}.npy'
+    truth = np.load(truth_path).astype(np.uint8)
 
-    slic_path = f'slics/slic_{region}.npy'
+    slic_path = f'data/slics/slic_{region}.npy'
     slic = np.load(slic_path)
 
     assert truth.shape[:2] == slic.shape[:2]
