@@ -1,5 +1,5 @@
 import torch
-from data.dataset import XinguDataset
+from segmentation_dataset.dataset import XinguDataset
 from data.cross_val_iterator import CrossValidationIterator
 import models
 import pytorch_lightning as pl
@@ -30,7 +30,8 @@ compname = '' + ''.join([str(i) for i in COMPOSITION]
 regions = [1, 2, 3, 4, 6, 7, 8, 9, 10]  # Regions from 1 to 10 (excluding 5)
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--loss", type=str, choices=['bce', 'gbcloss'], default='bce')
+parser.add_argument("--loss", type=str,
+                    choices=['bce', 'gbcloss'], default='bce')
 args = parser.parse_args()
 
 if args.loss == 'bce':
