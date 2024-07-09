@@ -4,6 +4,9 @@ import mahotas
 import os
 from tqdm import tqdm
 import sys
+import multiprocessing
+import argparse
+
 
 def get_hor(segment):
     # flattening segment
@@ -17,65 +20,73 @@ def get_hor(segment):
 
     return HoR
 
+
 def get_major_class(segment):
     if np.argmax(np.bincount(segment.flatten())) == 2:
         return "forest"
     elif np.argmax(np.bincount(segment.flatten())) == 3:
-        return "not_analyzed"
+        return "notanalyzed"
     else:
-        return "non_forest"
-    
+        return "nonforest"
+
+
 def get_region(path):
     return f"{path.split('/')[-1].split('.')[0].split('_')[-1].split('-')[0]}"
-    
+
+
 def evaluate_segment(segment):
     classification = get_major_class(segment)
 
-    if (segment.shape[0] * segment.shape[1] > 70) and (get_hor(segment > 0.7))\
-        and (classification in ["forest", "non_forest"]):
+    if (segment.shape[0] * segment.shape[1] > 70) and (get_hor(segment > 0.7)):
         return True
 
     return False
 
+def process_segment(data):
+    region, (bbox, label), image, truth = data
+    minr, minc, maxr, maxc = bbox
+    segment_image = image[minr:maxr, minc:maxc, :]
+    segment_truth = truth[minr:maxr, minc:maxc]
+    segment_class = get_major_class(segment_truth)
+    segment_id = label
+
+    if evaluate_segment(segment_truth):
+        segment_haralick = [mahotas.features.haralick(segment_image[:, :, channel]) for channel in range(segment_image.shape[2])]
+        np.save(f'data/classification_dataset/{region}/{segment_class}_{segment_id}.npy', segment_haralick)
+
+
 if __name__ == "__main__":
-    # Get region from command line
-    region = sys.argv[1]
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--processes", "-p", type=int, default=16)
+    
+    args = parser.parse_args()
 
-    val_region = ['x08']
-    test_regions = ['x03', 'x04']
+    num_processes = args.processes
 
-    scope = 'test' if region in test_regions else 'val' if region in val_region else 'train'
+    regions = [f"x{x:02d}" for x in range(1, 11) if x != 5]
 
     # Create directories
-    os.makedirs(f'data/classification_dataset/{scope}/forest', exist_ok=True)
-    os.makedirs(f'data/classification_dataset/{scope}/non_forest', exist_ok=True)
+    for region in regions: 
+        os.makedirs(f'data/classification_dataset/{region}/', exist_ok=True)
 
-    image_path = f'data/scenes_sentinel/{region}.npy'
-    image = np.load(image_path).astype(np.uint8)
+        image_path = f'data/scenes_sentinel/{region}.npy'
+        image = np.load(image_path).astype(np.uint8)
 
-    truth_path = f'data/truth_masks_sentinel/truth_{region}.npy'
-    truth = np.load(truth_path).astype(np.uint8)
+        truth_path = f'data/truth_masks_sentinel/truth_{region}.npy'
+        truth = np.load(truth_path).astype(np.uint8)
 
-    slic_path = f'data/slics_sentinel/mask_slic_{region}.npy'
-    slic = np.load(slic_path)
+        slic_path = f'data/slics_sentinel/mask_slic_{region}.npy'
+        slic = np.load(slic_path)
 
-    assert truth.shape[:2] == slic.shape[:2]
-    assert truth.shape[:2] == image.shape[:2]
+        assert truth.shape[:2] == slic.shape[:2]
+        assert truth.shape[:2] == image.shape[:2]
 
-    props = regionprops(slic)
+        props = regionprops(slic)
 
-    segments = []
+        segments = [(region, (prop.bbox, prop.label), image, truth) for prop in props]
 
-    for prop in tqdm(props, desc=f'Processing {region}'):
-        minr, minc, maxr, maxc = prop.bbox
-        segment_image = image[minr:maxr, minc:maxc, :]
-        segment_truth = truth[minr:maxr, minc:maxc]
-        segment_class = get_major_class(segment_truth)
-        segment_id = prop.label                
 
-        if evaluate_segment(segment_truth):
-            # Computing Haralick features for the segment
-            segment_haralick = [mahotas.features.haralick(segment_image[:, :, channel]) for channel in range(segment_image.shape[2])]
+        with multiprocessing.Pool(num_processes) as pool:
+            chunksize = int(len(segments) / (10 * num_processes))  # Adjust 10 based on performance tests
+            list(tqdm(pool.imap(process_segment, segments, chunksize=chunksize), total=len(segments), desc=f'Processing {region}'))
 
-            # Saving haralick segment
-            np.save(f'data/classification_dataset/{scope}/{segment_class}/{region}_{segment_id}.npy', segment_haralick)

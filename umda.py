@@ -1,13 +1,13 @@
 import random
 from sklearn.svm import SVC
 from sklearn.metrics import balanced_accuracy_score
-import glob
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
 import sys
 import logging
 import argparse
+from umda_dataset import UMDADataset
 
 
 def generate_individual(num_features):
@@ -135,8 +135,6 @@ def umda(X_train, X_test, y_train, y_test, population_size,
     num_features = X_train[0].shape[0]
     population = generate_population(population_size, num_features)
 
-    logging.basicConfig(filename=f'results/{exp_name}/logfile-{seed}.out',
-                        level=logging.INFO)
     # Logging experiment settings
     logging.info(f'Seed: {seed}')
     logging.info(f'Number of features (bands): {num_features}')
@@ -197,41 +195,33 @@ if __name__ == '__main__':
     np.random.seed(seed)
     random.seed(seed)
 
-    # Loading dataset
-    # Training set
-    X_train = []
-    y_train = []
-    for filename in glob.glob('data/classification_dataset/train/forest/*'):
-        X_train.append(np.load(filename))
-        y_train.append(0)
-    for filename in glob.glob('data/classification_dataset/train/non_forest/*'):
-        X_train.append(np.load(filename))
-        y_train.append(1)
-
-    # Validation set
-    X_val = []
-    y_val = []
-    for filename in glob.glob('data/classification_dataset/val/forest/*'):
-        X_val.append(np.load(filename))
-        y_val.append(0)
-    for filename in glob.glob('data/classification_dataset/val/non_forest/*'):
-        X_val.append(np.load(filename))
-        y_val.append(1)
+    # Set up logging
+    logging.basicConfig(filename=f'results/{exp_name}/logfile-{seed}.out',
+                        level=logging.INFO)
     
-    # Test set
-    X_test = []
-    y_test = []
-    for filename in glob.glob('data/classification_dataset/test/forest/*'):
-        X_test.append(np.load(filename))
-        y_test.append(0)
-    for filename in glob.glob('data/classification_dataset/test/non_forest/*'):
-        X_test.append(np.load(filename))
-        y_test.append(1)
+    # Defining regions
+    train_regions = ["x01", "x02", "x06", "x09", "x10"]
+    val_regions = ["x07", "x08"]
+    test_regions = ["x03", "x04"]
+
+    # Log regions
+    logging.info(f'Train regions: {train_regions}')
+    logging.info(f'Validation regions: {val_regions}')
+    logging.info(f'Test regions: {test_regions}')
+
+    # Loading datasets
+    train_ds = UMDADataset('data/classification_datasets/sentinel_maskSLIC', train_regions)
+    val_ds = UMDADataset('data/classification_datasets/sentinel_maskSLIC', val_regions)
+    test_ds = UMDADataset('data/classification_datasets/sentinel_maskSLIC', test_regions)
+
+    X_train, y_train = train_ds.get_set()
+    X_val, y_val = val_ds.get_set()
+    X_test, y_test = test_ds.get_set()
 
     # Call UMDA
     num_best = 15
     population_size = 60
-    num_generations = 6
+    num_generations = 2
     num_parents = 10
     num_offspring = 50
     inf_lim = 1/8
