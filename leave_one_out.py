@@ -79,6 +79,7 @@ if __name__ == "__main__":
         all_fold_results.append(fold_results)
         fold_results.to_csv(f"{args.output_dir}/fold_{fold_num}.csv", index=False)
         logging.info(f"Completed fold {fold_num}")
+        print(f"Completed fold {fold_num}")
 
     all_fold_results = pd.concat(all_fold_results)
     all_fold_results.to_csv(f"{args.output_dir}/all_folds.csv", index=False)
