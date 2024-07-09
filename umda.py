@@ -9,10 +9,6 @@ import sys
 import logging
 import argparse
 
-# Get command line arguments
-exp_name = str(sys.argv[1])
-seed = int(sys.argv[2])
-
 
 def generate_individual(num_features):
     individual = [random.randint(0, 1) for _ in range(num_features)]
