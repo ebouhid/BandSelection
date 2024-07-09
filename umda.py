@@ -135,8 +135,6 @@ def umda(X_train, X_test, y_train, y_test, population_size,
     num_features = X_train[0].shape[0]
     population = generate_population(population_size, num_features)
 
-    logging.basicConfig(filename=f'results/{exp_name}/logfile-{seed}.out',
-                        level=logging.INFO)
     # Logging experiment settings
     logging.info(f'Seed: {seed}')
     logging.info(f'Number of features (bands): {num_features}')
@@ -197,10 +195,24 @@ if __name__ == '__main__':
     np.random.seed(seed)
     random.seed(seed)
 
+    # Set up logging
+    logging.basicConfig(filename=f'results/{exp_name}/logfile-{seed}.out',
+                        level=logging.INFO)
+    
+    # Defining regions
+    train_regions = ["x01", "x02", "x06", "x09", "x10"]
+    val_regions = ["x07", "x08"]
+    test_regions = ["x03", "x04"]
+
+    # Log regions
+    logging.info(f'Train regions: {train_regions}')
+    logging.info(f'Validation regions: {val_regions}')
+    logging.info(f'Test regions: {test_regions}')
+
     # Loading datasets
-    train_ds = UMDADataset('data/classification_datasets/sentinel_maskSLIC', ["x01", "x02", "x06", "x09", "x10"])
-    val_ds = UMDADataset('data/classification_datasets/sentinel_maskSLIC', ["x07", "x08"])
-    test_ds = UMDADataset('data/classification_datasets/sentinel_maskSLIC', ["x03", "x04"])
+    train_ds = UMDADataset('data/classification_datasets/sentinel_maskSLIC', train_regions)
+    val_ds = UMDADataset('data/classification_datasets/sentinel_maskSLIC', val_regions)
+    test_ds = UMDADataset('data/classification_datasets/sentinel_maskSLIC', test_regions)
 
     X_train, y_train = train_ds.get_set()
     X_val, y_val = val_ds.get_set()
