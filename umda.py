@@ -131,13 +131,13 @@ def generate_offspring(parents, num_offspring, distribution, inf_lim, sup_lim):
         if sum(individual) == 0:
             individual = generate_individual(len(individual))
         offspring.append(individual)
-    
+
     return offspring
 
 
 def umda(X_train, X_test, y_train, y_test, population_size,
-                      num_generations, num_parents, num_offspring, inf_lim,
-                      sup_lim, seed):
+         num_generations, num_parents, num_offspring, inf_lim,
+         sup_lim, seed):
     num_features = X_train[0].shape[0]
     population = generate_population(population_size, num_features)
 
@@ -179,7 +179,8 @@ def umda(X_train, X_test, y_train, y_test, population_size,
 
     # Get the final fitness scores
     scores_df = pd.DataFrame()
-    scores = evaluate_population(population, X_train, X_test, y_train, y_test, seed=seed)
+    scores = evaluate_population(
+        population, X_train, X_test, y_train, y_test, seed=seed)
     scores_df['Individual'] = population
     scores_df['Val accuracy'] = scores
 
@@ -188,6 +189,7 @@ def umda(X_train, X_test, y_train, y_test, population_size,
                                                    ascending=False)
 
     return final_best_individuals
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -204,7 +206,7 @@ if __name__ == '__main__':
     # Set up logging
     logging.basicConfig(filename=f'results/{exp_name}/logfile-{seed}.out',
                         level=logging.INFO)
-    
+
     # Defining regions
     train_regions = ["x01", "x02", "x06", "x09", "x10"]
     val_regions = ["x07", "x08"]
@@ -216,9 +218,12 @@ if __name__ == '__main__':
     logging.info(f'Test regions: {test_regions}')
 
     # Loading datasets
-    train_ds = UMDADataset('data/classification_datasets/sentinel_maskSLIC', train_regions)
-    val_ds = UMDADataset('data/classification_datasets/sentinel_maskSLIC', val_regions)
-    test_ds = UMDADataset('data/classification_datasets/sentinel_maskSLIC', test_regions)
+    train_ds = UMDADataset(
+        'data/classification_datasets/sentinel_maskSLIC', train_regions)
+    val_ds = UMDADataset(
+        'data/classification_datasets/sentinel_maskSLIC', val_regions)
+    test_ds = UMDADataset(
+        'data/classification_datasets/sentinel_maskSLIC', test_regions)
 
     X_train, y_train = train_ds.get_set()
     X_val, y_val = val_ds.get_set()
@@ -234,8 +239,8 @@ if __name__ == '__main__':
     sup_lim = 7/8
 
     results = umda(X_train, X_val, y_train, y_val, population_size,
-                                num_generations, num_parents, num_offspring,
-                                inf_lim, sup_lim)
+                   num_generations, num_parents, num_offspring,
+                   inf_lim, sup_lim)
 
     results['Test accuracy'] = results['Individual'].apply(
         lambda ind: calculate_fitness(ind, X_train, X_test, y_train, y_test, seed=seed))

@@ -5,6 +5,7 @@ import pandas as pd
 import os
 import logging
 
+
 class LeaveOneOutIterator:
     def __init__(self, region_list):
         self.region_list = region_list
@@ -46,13 +47,15 @@ if __name__ == "__main__":
     loop = LeaveOneOutIterator(regions)
 
     # Setup logging
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+    logging.basicConfig(level=logging.INFO,
+                        format='%(asctime)s - %(levelname)s - %(message)s')
 
     for fold_num, (train_regions, test_region) in enumerate(loop):
         log_filename = f"{args.output_dir}/log_fold_{fold_num}.log"
         file_handler = logging.FileHandler(log_filename, mode='w')
-        file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
-        
+        file_handler.setFormatter(logging.Formatter(
+            '%(asctime)s - %(levelname)s - %(message)s'))
+
         # Clear existing handlers, and add the new handler
         for handler in logging.root.handlers[:]:
             logging.root.removeHandler(handler)
@@ -63,10 +66,12 @@ if __name__ == "__main__":
         logging.info(f"Test region: {[test_region]}")
 
         logging.info(f"Seed: {args.seed}")
-        
+
         # Load datasets
-        train_dataset = UMDADataset(args.segs_path, train_regions, args.include_notanalyzed)
-        test_dataset = UMDADataset(args.segs_path, [test_region], args.include_notanalyzed)
+        train_dataset = UMDADataset(
+            args.segs_path, train_regions, args.include_notanalyzed)
+        test_dataset = UMDADataset(
+            args.segs_path, [test_region], args.include_notanalyzed)
 
         X_train, y_train = train_dataset.get_set()
         X_test, y_test = test_dataset.get_set()
@@ -77,7 +82,8 @@ if __name__ == "__main__":
                                  args.inf_lim, args.sup_lim, seed=args.seed)
         fold_results['fold'] = fold_num
         all_fold_results.append(fold_results)
-        fold_results.to_csv(f"{args.output_dir}/fold_{fold_num}.csv", index=False)
+        fold_results.to_csv(
+            f"{args.output_dir}/fold_{fold_num}.csv", index=False)
         logging.info(f"Completed fold {fold_num}")
         print(f"Completed fold {fold_num}")
 
