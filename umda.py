@@ -8,6 +8,7 @@ import sys
 import logging
 import argparse
 from umda_dataset import UMDADataset
+from concurrent.futures import ThreadPoolExecutor
 
 
 def generate_individual(num_features):
@@ -18,7 +19,27 @@ def generate_individual(num_features):
 
 
 def generate_population(population_size, num_features):
-    return [generate_individual(num_features) for _ in range(population_size)]
+    # Generating a set of unique individuals
+    population = set()
+    while len(population) < population_size:
+        individual = tuple(generate_individual(num_features))  # Note the conversion to tuple
+        population.add(individual)
+    return list(population)  # Convert back to list for further processing
+
+def generate_offspring(parents, num_offspring, distribution, inf_lim, sup_lim):
+    offspring = set()
+    while len(offspring) < num_offspring:
+        for i in range(len(distribution)):
+            distribution[i] = distribution[i] if (inf_lim <= distribution[i] <= sup_lim) else 0
+        individual = tuple([
+            random.choices([0, 1], weights=[1 - p, p])[0] for p in distribution
+        ])
+        # Preventing null individual (all zeroes)
+        if sum(individual) == 0:
+            individual = tuple(generate_individual(len(individual)))
+        offspring.add(individual)
+    return list(offspring)
+
 
 
 def calculate_fitness(individual, X_train, X_test, y_train, y_test, seed):
@@ -43,7 +64,9 @@ def calculate_fitness(individual, X_train, X_test, y_train, y_test, seed):
               random_state=seed,
               )
     clf.fit(X_train_sel, y_train)
+    logging.info(f"Fit classifier with {len(selected_bands)} bands (individual {individual})")
     y_pred = clf.predict(X_test_sel)
+    logging.info(f"Predicted test set (individual {individual})")
     return balanced_accuracy_score(y_test, y_pred)
 
 
@@ -55,10 +78,16 @@ def evaluate_population(population, X_train, X_test, y_train, y_test, seed, gene
             msg = f"Generation {generation}"
     else:
         msg = "Final evaluation"
-    return [
-        calculate_fitness(individual, X_train, X_test, y_train, y_test, seed)
-        for individual in tqdm(population, desc=msg)
-    ]
+
+    def evaluate_individual(individual):
+        return calculate_fitness(individual, X_train, X_test, y_train, y_test, seed)
+
+    # Using ThreadPoolExecutor to parallelize evaluations
+    with ThreadPoolExecutor() as executor:
+        results = list(tqdm(executor.map(evaluate_individual, population), total=len(population), desc=msg))
+
+    return results
+
 
 
 def crossover(parents, offspring_size, xover_prob):
@@ -116,23 +145,6 @@ def estimate_distribution(selected_individuals, num_features):
     for individual in selected_individuals:
         distribution += np.array(individual)
     return distribution / len(selected_individuals)
-
-
-def generate_offspring(parents, num_offspring, distribution, inf_lim, sup_lim):
-    offspring = []
-    for _ in range(num_offspring):
-        for i in range(len(distribution)):
-            distribution[i] = distribution[i] if (
-                inf_lim <= distribution[i] <= sup_lim) else 0
-        individual = [
-            random.choices([0, 1], weights=[1 - p, p])[0] for p in distribution
-        ]
-        # preventing null individual (all zeroes)
-        if sum(individual) == 0:
-            individual = generate_individual(len(individual))
-        offspring.append(individual)
-
-    return offspring
 
 
 def umda(X_train, X_test, y_train, y_test, population_size,
