@@ -21,7 +21,7 @@ def generate_population(population_size, num_features):
     return [generate_individual(num_features) for _ in range(population_size)]
 
 
-def calculate_fitness(individual, X_train, X_test, y_train, y_test):
+def calculate_fitness(individual, X_train, X_test, y_train, y_test, seed):
     """
     Calculate the fitness of an individual by training an SVM classifier and
     evaluating its performance using accuracy.
@@ -47,10 +47,10 @@ def calculate_fitness(individual, X_train, X_test, y_train, y_test):
     return balanced_accuracy_score(y_test, y_pred)
 
 
-def evaluate_population(population, X_train, X_test, y_train, y_test, generation=None):
+def evaluate_population(population, X_train, X_test, y_train, y_test, seed, generation=None):
     msg = f'Generation {generation}' if generation else 'First Evaluation'
     return [
-        calculate_fitness(individual, X_train, X_test, y_train, y_test)
+        calculate_fitness(individual, X_train, X_test, y_train, y_test, seed)
         for individual in tqdm(population, desc=msg)
     ]
 
@@ -131,7 +131,7 @@ def generate_offspring(parents, num_offspring, distribution, inf_lim, sup_lim):
 
 def umda(X_train, X_test, y_train, y_test, population_size,
                       num_generations, num_parents, num_offspring, inf_lim,
-                      sup_lim):
+                      sup_lim, seed):
     num_features = X_train[0].shape[0]
     population = generate_population(population_size, num_features)
 
@@ -150,7 +150,7 @@ def umda(X_train, X_test, y_train, y_test, population_size,
     for generation in loop:
         # Evaluate fitness
         scores = evaluate_population(population, X_train, X_test, y_train,
-                                     y_test, generation)
+                                     y_test, seed, generation)
 
         # Log the 3 best individuals
         scores_df = pd.DataFrame()
@@ -173,7 +173,7 @@ def umda(X_train, X_test, y_train, y_test, population_size,
 
     # Get the final fitness scores
     scores_df = pd.DataFrame()
-    scores = evaluate_population(population, X_train, X_test, y_train, y_test)
+    scores = evaluate_population(population, X_train, X_test, y_train, y_test, seed=seed)
     scores_df['Individual'] = population
     scores_df['Val accuracy'] = scores
 
@@ -232,6 +232,6 @@ if __name__ == '__main__':
                                 inf_lim, sup_lim)
 
     results['Test accuracy'] = results['Individual'].apply(
-        lambda ind: calculate_fitness(ind, X_train, X_test, y_train, y_test))
+        lambda ind: calculate_fitness(ind, X_train, X_test, y_train, y_test, seed=seed))
 
     print(results.sort_values(by='Test accuracy', ascending=False).head(num_best))
