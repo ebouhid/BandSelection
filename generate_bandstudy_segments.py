@@ -52,12 +52,16 @@ def process_segment(data):
 
     if evaluate_segment(segment_truth):
         segment_haralick = [mahotas.features.haralick(segment_image[:, :, channel]) for channel in range(segment_image.shape[2])]
-        np.save(f'data/classification_dataset/{region}/{segment_class}_{segment_id}.npy', segment_haralick)
+        np.save(f'data/classification_datasets/{args.dataset_name}/{region}/{segment_class}_{segment_id}.npy', segment_haralick)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--processes", "-p", type=int, default=16)
+    parser.add_argument("--dataset_name", "-d", type=str, required=True)
+    parser.add_argument("--scenes_path", "-s", type=str, required=True)
+    parser.add_argument("--truth_path", "-t", type=str, required=True)
+    parser.add_argument("--slic_path", "-l", type=str, required=True)
     
     args = parser.parse_args()
 
@@ -67,15 +71,15 @@ if __name__ == "__main__":
 
     # Create directories
     for region in regions: 
-        os.makedirs(f'data/classification_dataset/{region}/', exist_ok=True)
+        os.makedirs(f'data/classification_datasets/{args.dataset_name}/{region}/', exist_ok=True)
 
-        image_path = f'data/scenes_sentinel/{region}.npy'
+        image_path = f'{args.scenes_path}/{region}.npy'
         image = np.load(image_path).astype(np.uint8)
 
-        truth_path = f'data/truth_masks_sentinel/truth_{region}.npy'
+        truth_path = f'{args.truth_path}/truth_{region}.npy'
         truth = np.load(truth_path).astype(np.uint8)
 
-        slic_path = f'data/slics_sentinel/mask_slic_{region}.npy'
+        slic_path = f'{args.slic_path}/slic_{region}.npy'
         slic = np.load(slic_path)
 
         assert truth.shape[:2] == slic.shape[:2]
