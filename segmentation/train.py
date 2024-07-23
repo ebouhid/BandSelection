@@ -1,6 +1,6 @@
 import torch
 from segmentation_dataset.dataset import XinguDataset
-from data.cross_val_iterator import CrossValidationIterator
+from segmentation_dataset.cross_val_iterator import CrossValidationIterator
 import models
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
