@@ -22,6 +22,7 @@ def set_args():
     parser.add_argument('--composition', type=int, nargs='+', default=[6, 5, 1], help='Composition of input data.')
     parser.add_argument("--loss", type=str,choices=['bce', 'gbcloss'], default='bce')
     parser.add_argument("--info", type=str, default='Default')
+    parser.add_argument("--gpu_ids", type=int, nargs='+', required=False, help='GPU IDs to use.')
 
     return parser.parse_args()
 
@@ -39,6 +40,7 @@ GT_DIR = args.gt_dir
 COMPOSITION = args.composition
 LOSS_FN = args.loss
 INFO = args.info
+GPU_IDS = args.gpu_ids if args.gpu_ids is not None else "auto"
 
 # Set experiment name
 mlflow.set_experiment(INFO)
@@ -107,6 +109,7 @@ for fold, (train_regions, test_regions) in enumerate(kfold):
     mlflow.pytorch.autolog()
     mlflow.log_params({
         'model_name': MODEL_NAME,
+        'gpu_ids': GPU_IDS,
         'loss': model.loss,
         'batch_size': BATCH_SIZE,
         'num_epochs': NUM_EPOCHS,
@@ -128,7 +131,7 @@ for fold, (train_regions, test_regions) in enumerate(kfold):
 
     # Instantiating trainer
     trainer = pl.Trainer(max_epochs=NUM_EPOCHS,
-                         callbacks=[checkpoint_callback], accelerator="gpu", devices=[0, 1])
+                         callbacks=[checkpoint_callback], accelerator="gpu", devices=GPU_IDS)
 
     # Training
     trainer.fit(model, train_loader, test_loader)
