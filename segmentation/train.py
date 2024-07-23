@@ -9,34 +9,49 @@ import albumentations as A
 import general_balanced as gb
 import argparse
 
+def set_args():
+    parser = argparse.ArgumentParser(description="Training script for DeepLabV3Plus model.")
+    parser.add_argument('--model_name', type=str, default='DeepLabV3Plus', help='Name of the model to use.')
+    parser.add_argument('--batch_size', type=int, default=16, help='Batch size for training.')
+    parser.add_argument('--num_epochs', type=int, default=100, help='Number of epochs for training.')
+    parser.add_argument('--patch_size', type=int, default=256, help='Patch size for training.')
+    parser.add_argument('--stride_size', type=int, default=64, help='Stride size for patch extraction.')
+    parser.add_argument('--num_classes', type=int, default=1, help='Number of output classes.')
+    parser.add_argument('--dataset_dir', type=str, default='./data/scenes_allbands_ndvi', help='Path to the dataset directory.')
+    parser.add_argument('--gt_dir', type=str, default='./data/truth_masks', help='Path to the ground truth masks directory.')
+    parser.add_argument('--composition', type=int, nargs='+', default=[6, 5, 1], help='Composition of input data.')
+    parser.add_argument("--loss", type=str,choices=['bce', 'gbcloss'], default='bce')
+    parser.add_argument("--info", type=str, default='Default')
+
+    return parser.parse_args()
+
+args = set_args()
+
+# Assign parsed arguments to original variable names
+MODEL_NAME = args.model_name
+BATCH_SIZE = args.batch_size
+NUM_EPOCHS = args.num_epochs
+PATCH_SIZE = args.patch_size
+STRIDE_SIZE = args.stride_size
+NUM_CLASSES = args.num_classes
+DATASET_DIR = args.dataset_dir
+GT_DIR = args.gt_dir
+COMPOSITION = args.composition
+LOSS_FN = args.loss
+INFO = args.info
+
 # Set experiment name
-INFO = 'GBCLoss_Comparison_SGD'
 mlflow.set_experiment(INFO)
 
-# Set hyperparameters
-MODEL_NAME = 'DeepLabV3Plus'
-BATCH_SIZE = 16
-NUM_EPOCHS = 100
-PATCH_SIZE = 256
-STRIDE_SIZE = 64
-NUM_CLASSES = 1
-DATASET_DIR = './data/scenes_allbands_ndvi'
-GT_DIR = './data/truth_masks'
-COMPOSITION = [6, 5, 1]
 compname = '' + ''.join([str(i) for i in COMPOSITION]
                         ) if COMPOSITION != range(1, 10) else "All+NDVI"
 
 # Set regions
 regions = [1, 2, 3, 4, 6, 7, 8, 9, 10]  # Regions from 1 to 10 (excluding 5)
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--loss", type=str,
-                    choices=['bce', 'gbcloss'], default='bce')
-args = parser.parse_args()
-
-if args.loss == 'bce':
+if LOSS_FN == 'bce':
     loss = torch.nn.BCEWithLogitsLoss()
-elif args.loss == 'gbcloss':
+elif LOSS_FN == 'gbcloss':
     loss = gb.GBCLoss(k=10)
 
 aug = A.Compose([
