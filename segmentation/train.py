@@ -102,7 +102,7 @@ for fold, (train_regions, test_regions) in enumerate(kfold):
 
     # Instantiate the model for each fold
     model = models.DeforestationDetectionModel(in_channels=len(
-        COMPOSITION), composition_name=compname, loss=loss)
+        COMPOSITION), composition_name=compname, loss=loss, scenes_dir=DATASET_DIR, truth_dir=GT_DIR)
     model.set_fold_info(fold, train_regions, test_regions)
 
     # Instantiating logger

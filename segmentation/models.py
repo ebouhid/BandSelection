@@ -12,7 +12,7 @@ from general_balanced import GBC, functional_gbc
 
 
 class DeforestationDetectionModel(pl.LightningModule):
-    def __init__(self, in_channels, composition_name, loss, encoder_name='resnet101', lr=1e-3, encoder_weights='imagenet', debug=False):
+    def __init__(self, in_channels, composition_name, loss, encoder_name='resnet101', lr=1e-3, encoder_weights='imagenet', debug=False, **kwargs):
         super().__init__()
 
         # Defining model
@@ -31,6 +31,10 @@ class DeforestationDetectionModel(pl.LightningModule):
 
         self.composition_name = composition_name
         self.debug = debug
+
+        for kwarg in kwargs:
+            setattr(self, kwarg, kwargs[kwarg])
+            print(f'Setting {kwarg} to {kwargs[kwarg]}!')
 
         if loss.__class__.__name__ == 'FocalLoss':
             self.alpha = self.loss.alpha
@@ -125,6 +129,16 @@ class DeforestationDetectionModel(pl.LightningModule):
         return val_f1
 
     def on_save_checkpoint(self, checkpoint):
+        if not hasattr(self, "scenes_dir"):
+            print(f"No scenes_dir attribute set to {self.__class__.__name__}, will not save predictions.")
+            return
+        elif not hasattr(self, "truth_dir"):
+            print(f"No truth_dir attribute set to {self.__class__}, will not save predictions.")
+            return
+        elif (not hasattr(self, "train_regions")) or (not hasattr(self, "test_regions")):
+            print(f"Missing fold information in {self.__class__}, will not save predictions. Be sure to use the set_fold_info() method.")
+            return
+
         stride = 256
         patch_size = (256, 256)
 
@@ -139,11 +153,11 @@ class DeforestationDetectionModel(pl.LightningModule):
         # Get images and patchify
         for region in test_regions:
             image = np.load(
-                f'data/scenes_allbands_ndvi/allbands_ndvi_{region}.npy')
+                os.path.join(self.scenes_dir, f'{region}.npy'))
             # Normalize image
             image = (image - np.min(image)) / (np.max(image) - np.min(image))
 
-            truth = np.load(f'data/truth_masks/truth_{region}.npy').squeeze()
+            truth = np.load(os.path.join(self.truth_dir, f"truth_{region}.npy")).squeeze()
             # Adjust to binary segmentation
             truth = np.where(truth == 2, 0, 1)
 
