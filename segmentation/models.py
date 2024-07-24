@@ -9,10 +9,11 @@ from copy import deepcopy
 import cv2
 import os
 from general_balanced import GBC, functional_gbc
+import uuid
 
 
 class DeforestationDetectionModel(pl.LightningModule):
-    def __init__(self, in_channels, composition_name, loss, encoder_name='resnet101', lr=1e-3, encoder_weights='imagenet', debug=False, **kwargs):
+    def __init__(self, in_channels, composition_name, loss, encoder_name='resnet101', lr=1e-3, encoder_weights='imagenet', debug=False, info=None, **kwargs):
         super().__init__()
 
         # Defining model
@@ -31,6 +32,12 @@ class DeforestationDetectionModel(pl.LightningModule):
 
         self.composition_name = composition_name
         self.debug = debug
+
+        if info is None:
+            self.info = uuid.uuid4()
+            print(f"Setting info to random UUID: {self.info}")
+        else:
+            self.info = info
 
         for kwarg in kwargs:
             setattr(self, kwarg, kwargs[kwarg])
@@ -143,10 +150,10 @@ class DeforestationDetectionModel(pl.LightningModule):
         patch_size = (256, 256)
 
         if self.fold_num is None:
-            pred_dir = 'predictions'
+            pred_dir = f'predictions/{self.info}'
             test_regions = self.test_regions
         else:
-            pred_dir = f'predictions/fold{self.fold_num}'
+            pred_dir = f'predictions/{self.info}/fold{self.fold_num}'
             test_regions = self.test_regions
 
         os.makedirs(pred_dir, exist_ok=True)

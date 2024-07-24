@@ -21,7 +21,8 @@ def set_args():
     parser.add_argument('--gt_dir', type=str, default='./data/truth_masks', help='Path to the ground truth masks directory.')
     parser.add_argument('--composition', type=int, nargs='+', default=[6, 5, 1], help='Composition of input data.')
     parser.add_argument("--loss", type=str,choices=['bce', 'gbcloss'], default='bce')
-    parser.add_argument("--info", type=str, default='Default')
+    parser.add_argument("--info", type=str, required=False, help='Additional information to be added to the model name.')
+    parser.add_argument("--exp_name", type=str, default='Default')
     parser.add_argument("--gpu_ids", type=int, nargs='+', required=False, help='GPU IDs to use.')
 
     return parser.parse_args()
@@ -43,7 +44,7 @@ INFO = args.info
 GPU_IDS = args.gpu_ids if args.gpu_ids is not None else "auto"
 
 # Set experiment name
-mlflow.set_experiment(INFO)
+mlflow.set_experiment(args.exp_name)
 
 compname = '' + ''.join([str(i) for i in COMPOSITION]
                         ) if COMPOSITION != range(1, 10) else "All+NDVI"
@@ -102,7 +103,7 @@ for fold, (train_regions, test_regions) in enumerate(kfold):
 
     # Instantiate the model for each fold
     model = models.DeforestationDetectionModel(in_channels=len(
-        COMPOSITION), composition_name=compname, loss=loss, scenes_dir=DATASET_DIR, truth_dir=GT_DIR)
+        COMPOSITION), composition_name=compname, loss=loss, info=INFO, scenes_dir=DATASET_DIR, truth_dir=GT_DIR)
     model.set_fold_info(fold, train_regions, test_regions)
 
     # Instantiating logger
@@ -118,6 +119,7 @@ for fold, (train_regions, test_regions) in enumerate(kfold):
         'num_classes': NUM_CLASSES,
         'dataset_dir': DATASET_DIR,
         'gt_dir': GT_DIR,
+        'info': INFO,
         'composition': compname,
         'train_regions': train_regions,
         'test_regions': test_regions,
