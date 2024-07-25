@@ -20,7 +20,7 @@ def set_args():
     parser.add_argument('--dataset_dir', type=str, default='./data/scenes_allbands_ndvi', help='Path to the dataset directory.')
     parser.add_argument('--gt_dir', type=str, default='./data/truth_masks', help='Path to the ground truth masks directory.')
     parser.add_argument('--composition', type=int, nargs='+', default=[6, 5, 1], help='Composition of input data.')
-    parser.add_argument("--loss", type=str,choices=['bce', 'gbcloss'], default='bce')
+    parser.add_argument("--loss", type=str,choices=['bce', 'bccelogits', 'gbcloss'], default='bce')
     parser.add_argument("--info", type=str, required=False, help='Additional information to be added to the model name.')
     parser.add_argument("--exp_name", type=str, default='Default')
     parser.add_argument("--gpu_ids", type=int, nargs='+', required=False, help='GPU IDs to use.')
@@ -53,6 +53,8 @@ compname = '' + ''.join([str(i) for i in COMPOSITION]
 regions = [1, 2, 3, 4, 6, 7, 8, 9, 10]  # Regions from 1 to 10 (excluding 5)
 
 if LOSS_FN == 'bce':
+    loss = torch.nn.BCELoss()
+elif LOSS_FN == 'bcelogits':
     loss = torch.nn.BCEWithLogitsLoss()
 elif LOSS_FN == 'gbcloss':
     loss = gb.GBCLoss(k=10)
