@@ -59,13 +59,9 @@ elif LOSS_FN == 'gbcloss':
 
 aug = A.Compose([
     A.VerticalFlip(p=0.5),
-    A.RandomRotate90(p=0.5),
-    A.OneOf([
-        A.ElasticTransform(p=0.5, alpha=120, sigma=120 *
-                           0.05, alpha_affine=120 * 0.03),
-        A.GridDistortion(p=0.5),
-        A.OpticalDistortion(distort_limit=1, shift_limit=0.5, p=1),
-    ], p=0.8)])
+    A.HorizontalFlip(p=0.5),
+    A.Rotate(limit=30, p=0.5),
+])
 
 # Instantiate KFold
 kfold = CrossValidationIterator(regions)
