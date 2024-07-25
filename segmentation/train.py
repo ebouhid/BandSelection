@@ -24,6 +24,7 @@ def set_args():
     parser.add_argument("--info", type=str, required=False, help='Additional information to be added to the model name.')
     parser.add_argument("--exp_name", type=str, default='Default')
     parser.add_argument("--gpu_ids", type=int, nargs='+', required=False, help='GPU IDs to use.')
+    parser.add_argument("--lr", type=float, default=1e-3, help='Learning rate for training.')
 
     return parser.parse_args()
 
@@ -42,6 +43,7 @@ COMPOSITION = args.composition
 LOSS_FN = args.loss
 INFO = args.info
 GPU_IDS = args.gpu_ids if args.gpu_ids is not None else "auto"
+LR = args.lr
 
 # Set experiment name
 mlflow.set_experiment(args.exp_name)
@@ -100,8 +102,14 @@ for fold, (train_regions, test_regions) in enumerate(kfold):
                                               num_workers=16)
 
     # Instantiate the model for each fold
-    model = models.DeforestationDetectionModel(in_channels=len(
-        COMPOSITION), composition_name=compname, loss=loss, info=INFO, scenes_dir=DATASET_DIR, truth_dir=GT_DIR)
+    model = models.DeforestationDetectionModel(in_channels=len(COMPOSITION),
+                                               composition_name=compname,
+                                               loss=loss,
+                                               lr=LR,
+                                               info=INFO,
+                                               scenes_dir=DATASET_DIR,
+                                               truth_dir=GT_DIR)
+    
     model.set_fold_info(fold, train_regions, test_regions)
 
     # Instantiating logger
@@ -118,6 +126,7 @@ for fold, (train_regions, test_regions) in enumerate(kfold):
         'dataset_dir': DATASET_DIR,
         'gt_dir': GT_DIR,
         'info': INFO,
+        'lr': LR,
         'composition': compname,
         'train_regions': train_regions,
         'test_regions': test_regions,
