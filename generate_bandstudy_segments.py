@@ -6,7 +6,16 @@ from tqdm import tqdm
 import sys
 import multiprocessing
 import argparse
+import skimage.io as io
 
+
+def load_superpixels(seg_path):
+    if seg_path.endswith(".npy"):
+        return np.load(seg_path)
+    elif seg_path.endswith((".png", ".pgm")):
+        return io.imread(seg_path)
+    else:
+        raise ValueError("Unsupported file format")
 
 def get_hor(segment):
     # flattening segment
@@ -79,11 +88,11 @@ if __name__ == "__main__":
         truth_path = f'{args.truth_path}/truth_{region}.npy'
         truth = np.load(truth_path).astype(np.uint8)
 
-        slic_path = f'{args.slic_path}/slic_{region}.npy'
-        slic = np.load(slic_path)
+        slic_path = f'{args.slic_path}/pca_{region}.pgm'
+        slic = load_superpixels(slic_path)
 
-        assert truth.shape[:2] == slic.shape[:2]
-        assert truth.shape[:2] == image.shape[:2]
+        assert truth.shape[:2] == slic.shape[:2], f"Truth shape: {truth.shape} | Slic shape: {slic.shape}"
+        assert truth.shape[:2] == image.shape[:2], f"Truth shape: {truth.shape} | Image shape: {image.shape}"
 
         props = regionprops(slic)
 
