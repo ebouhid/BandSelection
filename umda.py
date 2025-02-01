@@ -231,11 +231,11 @@ if __name__ == '__main__':
 
     # Loading datasets
     train_ds = UMDADataset(
-        'data/classification_datasets/sentinel_maskSLIC', train_regions)
+        'data/classification_datasets/landsat_SLIC_puc_4000', train_regions)
     val_ds = UMDADataset(
-        'data/classification_datasets/sentinel_maskSLIC', val_regions)
+        'data/classification_datasets/landsat_SLIC_puc_4000', val_regions)
     test_ds = UMDADataset(
-        'data/classification_datasets/sentinel_maskSLIC', test_regions)
+        'data/classification_datasets/landsat_SLIC_puc_4000', test_regions)
 
     X_train, y_train = train_ds.get_set()
     X_val, y_val = val_ds.get_set()
@@ -252,7 +252,7 @@ if __name__ == '__main__':
 
     results = umda(X_train, X_val, y_train, y_val, population_size,
                    num_generations, num_parents, num_offspring,
-                   inf_lim, sup_lim)
+                   inf_lim, sup_lim, args.seed)
 
     results['Test accuracy'] = results['Individual'].apply(
         lambda ind: calculate_fitness(ind, X_train, X_test, y_train, y_test, seed=seed))
