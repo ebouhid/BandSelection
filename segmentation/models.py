@@ -157,6 +157,7 @@ class DeforestationDetectionModel(pl.LightningModule):
             test_regions = self.test_regions
 
         os.makedirs(pred_dir, exist_ok=True)
+
         # Get images and patchify
         for region in test_regions:
             image = np.load(
@@ -253,20 +254,20 @@ class DeforestationDetectionModel(pl.LightningModule):
                                  false_positives, false_negatives)
 
             # Extend lower part of confusion mask for writing text
-            if self.fold_num is not None:
-                vertical_pad = 300
+            lines_needed = 3  # For metrics_str, gbc_str, and model_info_str (base)
+            fold_str = ""
+            train_regions_str = ""
+            test_regions_str = ""
+            if hasattr(self, "fold_num"):
+                lines_needed += 3
                 fold_str = f"Fold: {self.fold_num}"
                 train_regions_str = f"Train Regions: {self.train_regions}"
                 test_regions_str = f"Test Regions: {self.test_regions}"
-            else:
-                vertical_pad = 200
-            confusion_mask = np.pad(confusion_mask, ((
-                0, vertical_pad), (0, 75), (0, 0)), mode='constant', constant_values=0)
-            confusion_mask = (confusion_mask * 255).astype(np.uint8)
 
-            # Extend right part of image for writing text
-            if confusion_mask.shape[1] < 1280:
-                confusion_mask = np.pad(confusion_mask, ((0, 0), (0, 1280 - confusion_mask.shape[1]), (0, 0)), mode='constant', constant_values=0)
+            vertical_pad = int(height * 0.3)
+            horizontal_pad = int(width * 0.1)
+            confusion_mask = np.pad(confusion_mask, ((0, vertical_pad), (0, horizontal_pad), (0, 0)), mode='constant', constant_values=0)
+            confusion_mask = (confusion_mask * 255).astype(np.uint8)
 
             # Write metrics on image
             metrics_str = f"Precision: {precision :.2f} | Recall: {recall :.2f} | F1: {f1 :.2f} | Accuracy: {accuracy :.2f} | IoU: {iou :.2f}"
@@ -289,18 +290,28 @@ class DeforestationDetectionModel(pl.LightningModule):
             # Calculate font size based on confusion_mask size
             font_size = confusion_mask.shape[0] / 1000 * 0.8
             thickness = int(font_size * 2)
-            cv2.putText(confusion_mask, metrics_str, (0, height + 50),
-                        cv2.FONT_HERSHEY_SIMPLEX, font_size, (0, 255, 0), thickness)
-            cv2.putText(confusion_mask, gbc_str, (0, height + 85),
-                        cv2.FONT_HERSHEY_SIMPLEX, font_size, (0, 255, 0), thickness)
-            cv2.putText(confusion_mask, model_info_str, (0, height + 120),
-                        cv2.FONT_HERSHEY_SIMPLEX, font_size, (0, 255, 0), thickness)
-            cv2.putText(confusion_mask, fold_str, (0, height + 155),
-                        cv2.FONT_HERSHEY_SIMPLEX, font_size, (0, 255, 0), thickness)
-            cv2.putText(confusion_mask, train_regions_str, (0, height + 200),
-                        cv2.FONT_HERSHEY_SIMPLEX, font_size, (0, 255, 0), thickness)
-            cv2.putText(confusion_mask, test_regions_str, (0, height + 245),
-                        cv2.FONT_HERSHEY_SIMPLEX, font_size, (0, 255, 0), thickness)
+
+            # Dynamic y_offset based on image size
+            line_height = int(font_size * 40)
+            initial_offset = int(height * 0.05)  # Start writing 5% from the top
+            
+            # Writing text on the image
+            y_offset = height + initial_offset
+            cv2.putText(confusion_mask, metrics_str, (0, y_offset), cv2.FONT_HERSHEY_SIMPLEX, font_size, (0, 255, 0), thickness)
+            y_offset += line_height
+            cv2.putText(confusion_mask, gbc_str, (0, y_offset), cv2.FONT_HERSHEY_SIMPLEX, font_size, (0, 255, 0), thickness)
+            y_offset += line_height
+            cv2.putText(confusion_mask, model_info_str, (0, y_offset), cv2.FONT_HERSHEY_SIMPLEX, font_size, (0, 255, 0), thickness)
+
+            if self.fold_num is not None:
+                y_offset += line_height
+                cv2.putText(confusion_mask, fold_str, (0, y_offset), cv2.FONT_HERSHEY_SIMPLEX, font_size, (0, 255, 0), thickness)
+                y_offset += line_height
+                cv2.putText(confusion_mask, train_regions_str, (0, y_offset), cv2.FONT_HERSHEY_SIMPLEX, font_size, (0, 255, 0), thickness)
+                y_offset += line_height
+                cv2.putText(confusion_mask, test_regions_str, (0, y_offset), cv2.FONT_HERSHEY_SIMPLEX, font_size, (0, 255, 0), thickness)
+
+            # Saving confusion mask
             confusion_mask = cv2.cvtColor(confusion_mask, cv2.COLOR_BGR2RGB)
             cv2.imwrite(filename, confusion_mask)
 
