@@ -264,6 +264,10 @@ class DeforestationDetectionModel(pl.LightningModule):
                 train_regions_str = f"Train Regions: {self.train_regions}"
                 test_regions_str = f"Test Regions: {self.test_regions}"
 
+            vertical_pad = int(height * 0.2)
+            horizontal_pad = int(width * 0.1)
+            confusion_mask = np.pad(confusion_mask, ((0, vertical_pad), (0, horizontal_pad), (0, 0)), mode='constant', constant_values=0)
+
             vertical_pad = int(height * 0.3)
             horizontal_pad = int(width * 0.1)
             confusion_mask = np.pad(confusion_mask, ((0, vertical_pad), (0, horizontal_pad), (0, 0)), mode='constant', constant_values=0)
