@@ -158,6 +158,7 @@ class DeforestationDetectionModel(pl.LightningModule):
 
         os.makedirs(pred_dir, exist_ok=True)
 
+
         # Get images and patchify
         for region in test_regions:
             image = np.load(
@@ -254,6 +255,12 @@ class DeforestationDetectionModel(pl.LightningModule):
                                  false_positives, false_negatives)
 
             # Extend lower part of confusion mask for writing text
+            lines_needed = 3  # For metrics_str, gbc_str, and model_info_str (base)
+            fold_str = ""
+            train_regions_str = ""
+            test_regions_str = ""
+            if hasattr(self, "fold_num"):
+                lines_needed += 3
             lines_needed = 3  # For metrics_str, gbc_str, and model_info_str (base)
             fold_str = ""
             train_regions_str = ""

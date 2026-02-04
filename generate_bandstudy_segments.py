@@ -1,7 +1,16 @@
+import os
+
+# Set environment variables to disable multithreading in numpy/mahotas/skimage
+# to prevent thread explosion when using multiprocessing
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
+os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
+os.environ["NUMEXPR_NUM_THREADS"] = "1"
+
 import numpy as np
 from skimage.measure import regionprops
 import mahotas
-import os
 from tqdm import tqdm
 import sys
 import multiprocessing
@@ -38,7 +47,6 @@ def get_major_class(segment):
     else:
         return "nonforest"
 
-
 def get_region(path):
     return f"{path.split('/')[-1].split('.')[0].split('_')[-1].split('-')[0]}"
 
@@ -46,22 +54,19 @@ def get_region(path):
 def evaluate_segment(segment):
     classification = get_major_class(segment)
 
-    if (segment.shape[0] * segment.shape[1] > 70) and (get_hor(segment > 0.7)):
+    if (segment.shape[0] * segment.shape[1] > 70) and (get_hor(segment) > 0.7):
         return True
 
     return False
 
 def process_segment(data):
-    region, (bbox, label), image, truth = data
-    minr, minc, maxr, maxc = bbox
-    segment_image = image[minr:maxr, minc:maxc, :]
-    segment_truth = truth[minr:maxr, minc:maxc]
+    region, label, segment_image, segment_truth, dataset_name = data
     segment_class = get_major_class(segment_truth)
     segment_id = label
 
     if evaluate_segment(segment_truth):
         segment_haralick = [mahotas.features.haralick(segment_image[:, :, channel]) for channel in range(segment_image.shape[2])]
-        np.save(f'data/classification_datasets/{args.dataset_name}/{region}/{segment_class}_{segment_id}.npy', segment_haralick)
+        np.save(f'data/classification_datasets/{dataset_name}/{region}/{segment_class}_{segment_id}.npy', segment_haralick)
 
 
 if __name__ == "__main__":
@@ -74,7 +79,10 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
 
-    num_processes = args.processes
+    # Cap processes to avoid overloading system
+    cpu_count = multiprocessing.cpu_count()
+    num_processes = min(args.processes, cpu_count - 2)  # Leave 2 CPUs for system
+    print(f"Using {num_processes} processes (available CPUs: {cpu_count})")
 
     regions = [f"x{x:02d}" for x in range(1, 11) if x != 5]
 
@@ -82,24 +90,36 @@ if __name__ == "__main__":
     for region in regions: 
         os.makedirs(f'data/classification_datasets/{args.dataset_name}/{region}/', exist_ok=True)
 
-        image_path = f'{args.scenes_path}/{region}.npy'
-        image = np.load(image_path).astype(np.uint8)
+    # Process each region as a batch to limit memory usage
+    with multiprocessing.Pool(num_processes) as pool:
+        for region in regions:
+            image_path = f'{args.scenes_path}/{region}.npy'
+            image = np.load(image_path).astype(np.uint8)
 
-        truth_path = f'{args.truth_path}/truth_{region}.npy'
-        truth = np.load(truth_path).astype(np.uint8)
+            truth_path = f'{args.truth_path}/truth_{region}.npy'
+            truth = np.load(truth_path).astype(np.uint8)
 
-        slic_path = f'{args.slic_path}/pca_{region}.pgm'
-        slic = load_superpixels(slic_path)
+            slic_path = f'{args.slic_path}/slic_{region}.npy'
+            slic = load_superpixels(slic_path)
 
-        assert truth.shape[:2] == slic.shape[:2], f"Truth shape: {truth.shape} | Slic shape: {slic.shape}"
-        assert truth.shape[:2] == image.shape[:2], f"Truth shape: {truth.shape} | Image shape: {image.shape}"
+            assert truth.shape[:2] == slic.shape[:2], f"Truth shape: {truth.shape} | Slic shape: {slic.shape}"
+            assert truth.shape[:2] == image.shape[:2], f"Truth shape: {truth.shape} | Image shape: {image.shape}"
 
-        props = regionprops(slic)
+            props = regionprops(slic)
 
-        segments = [(region, (prop.bbox, prop.label), image, truth) for prop in props]
+            # Pre-extract segment crops for this region only
+            segments = []
+            for prop in props:
+                minr, minc, maxr, maxc = prop.bbox
+                segment_image = image[minr:maxr, minc:maxc, :].copy()
+                segment_truth = truth[minr:maxr, minc:maxc].copy()
+                segments.append((region, prop.label, segment_image, segment_truth, args.dataset_name))
 
-
-        with multiprocessing.Pool(num_processes) as pool:
-            chunksize = int(len(segments) / (10 * num_processes))  # Adjust 10 based on performance tests
-            list(tqdm(pool.imap(process_segment, segments, chunksize=chunksize), total=len(segments), desc=f'Processing {region}'))
+            # Process this region's segments
+            chunksize = max(1, len(segments) // (10 * num_processes))
+            list(tqdm(pool.imap(process_segment, segments, chunksize=chunksize), 
+                      total=len(segments), desc=f'Processing {region}'))
+            
+            # Free memory before next region
+            del image, truth, slic, segments
 
